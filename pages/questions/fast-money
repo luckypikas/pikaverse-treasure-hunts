@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Money - The Final Round (Randomized)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Custom styles for the Fast Money look */
+        .title-bar {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6, #1e3a8a);
+            border-bottom: 4px solid #fcd34d;
+        }
+        .score-box {
+            background-color: #fcd34d;
+            color: #1f2937;
+            text-shadow: 1px 1px 0 #92400e;
+        }
+        .answer-box {
+            transition: all 0.3s ease-in-out;
+            background-color: #4b5563;
+        }
+        .reveal-match {
+            background-color: #10b981; /* Green for match */
+            color: #064e3b;
+        }
+        .reveal-miss {
+            background-color: #ef4444; /* Red for miss */
+            color: #7f1d1d;
+        }
+        /* Shake animation for input errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-animation { animation: shake 0.3s ease-in-out 3; }
+
+        /* Timer bar animation */
+        #timer-bar {
+            transition: width linear;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white font-sans flex flex-col items-center p-4">
+
+    <!-- Game Container -->
+    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+        
+        <!-- Header: Game Title and Total Score -->
+        <header class="title-bar p-4 flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold tracking-wider text-white">FAST MONEY</h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-semibold uppercase">Attempts Left:</span>
+                <span id="tries-display" class="text-lg font-bold text-red-300"></span>
+                <div class="score-box px-4 py-2 rounded-lg font-black text-2xl shadow-xl">
+                    <span id="total-score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Status and Timer Display -->
+        <div class="p-4 border-b border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+                <p id="round-status" class="text-xl font-semibold text-yellow-400">Round Setup</p>
+                <p class="text-lg font-mono" id="timer-display">--s</p>
+            </div>
+            <!-- Timer Bar -->
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                <div id="timer-bar" class="bg-red-500 h-2.5 rounded-full" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <!-- Question and Answer Area -->
+        <div class="p-6">
+            <div id="game-container">
+                <!-- Questions/Inputs will be dynamically rendered here -->
+            </div>
+
+            <!-- Pre-Round & Post-Round Controls -->
+            <div id="control-panel" class="mt-8 text-center">
+                <p id="game-message" class="text-lg mb-4 font-light"></p>
+
+                <button id="start-round-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105" onclick="startRound()">
+                    Start Round 1
+                </button>
+
+                <button id="submit-round-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105" onclick="submitRound()">
+                    Submit Answers
+                </button>
+            </div>
+
+            <!-- Progression/Penalty Area -->
+            <div id="result-panel" class="hidden mt-8 text-center p-6 rounded-lg bg-gray-700">
+                <h2 id="final-message" class="text-3xl font-extrabold mb-4"></h2>
+                <p id="score-summary" class="text-xl mb-6"></p>
+                
+                <a id="progression-link" href="#" target="_blank" class="hidden text-xl font-bold bg-yellow-400 text-gray-900 py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2 mx-auto max-w-sm">
+                    <span>Enter The Portal</span> <i data-lucide="arrow-right"></i>
+                </a>
+
+                <button id="retry-btn" class="hidden text-lg font-bold bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 mt-4" onclick="location.reload()">
+                    Retry Fast Money (Attempt <span id="current-attempt-num"></span>)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- GAME CONFIGURATION ---
+        const GAME_CONFIG = {
+            NEXT_LEVEL_URL: "https://example.com/the-winners-portal",
+            SCORE_GOAL: 200,
+            MAX_TRIES: 3,
+            ROUND_1_TIME: 20, // seconds
+            ROUND_2_TIME: 25, // seconds
+            
+            // --- EXTENSIVE RANDOMIZED SURVEY DATA BANK (30+ questions) ---
+            SURVEY_DATA_BANK: [
+                // Q1-5
+                { q: "Something you put on toast", answers: [{a: "BUTTER", p: 40}, {a: "JAM", p: 30}, {a: "PEANUT BUTTER", p: 20}, {a: "JELLY", p: 10}] },
+                { q: "A famous detective", answers: [{a: "SHERLOCK HOLMES", p: 50}, {a: "HERCULE POIROT", p: 30}, {a: "COLUMBO", p: 15}, {a: "NANCY DREW", p: 5}] },
+                { q: "A job that requires a uniform", answers: [{a: "POLICE OFFICER", p: 45}, {a: "NURSE", p: 35}, {a: "PILOT", p: 10}, {a: "CHEF", p: 10}] },
+                { q: "Something people are afraid of", answers: [{a: "SPIDERS", p: 60}, {a: "HEIGHTS", p: 25}, {a: "SNAKES", p: 10}, {a: "DARK", p: 5}] },
+                { q: "A type of bird", answers: [{a: "ROBIN", p: 40}, {a: "PIGEON", p: 30}, {a: "EAGLE", p: 20}, {a: "CROW", p: 10}] },
+                // Q6-10
+                { q: "A cold food eaten in summer", answers: [{a: "ICE CREAM", p: 65}, {a: "SALAD", p: 20}, {a: "COLD CUTS", p: 10}, {a: "YOGURT", p: 5}] },
+                { q: "A thing people collect", answers: [{a: "STAMPS", p: 40}, {a: "COINS", p: 30}, {a: "DOLLS", p: 15}, {a: "SPORTS CARDS", p: 15}] },
+                { q: "Something that gets tangled", answers: [{a: "HEADPHONES", p: 50}, {a: "HAIR", p: 30}, {a: "STRING", p: 15}, {a: "YARN", p: 5}] },
+                { q: "An animal found in a zoo", answers: [{a: "LION", p: 50}, {a: "TIGER", p: 30}, {a: "MONKEY", p: 15}, {a: "GIRAFFE", p: 5}] },
+                { q: "A beverage consumed hot", answers: [{a: "COFFEE", p: 50}, {a: "TEA", p: 35}, {a: "HOT CHOCOLATE", p: 10}, {a: "SOUP", p: 5}] },
+                // Q11-15
+                { q: "A popular Halloween costume", answers: [{a: "WITCH", p: 40}, {a: "GHOST", p: 30}, {a: "VAMPIRE", p: 20}, {a: "PIRATE", p: 10}] },
+                { q: "A kind of pie", answers: [{a: "APPLE", p: 60}, {a: "CHERRY", p: 20}, {a: "PECAN", p: 10}, {a: "PUMPKIN", p: 10}] },
+                { q: "Something associated with the rain", answers: [{a: "UMBRELLA", p: 50}, {a: "PONCHO", p: 30}, {a: "RAINCOAT", p: 15}, {a: "PUDDLE", p: 5}] },
+                { q: "A musical instrument", answers: [{a: "GUITAR", p: 50}, {a: "PIANO", p: 30}, {a: "DRUMS", p: 10}, {a: "VIOLIN", p: 10}] },
+                { q: "A store found in a mall", answers: [{a: "CLOTHING STORE", p: 40}, {a: "SHOE STORE", p: 30}, {a: "FOOD COURT", p: 20}, {a: "JEWELRY STORE", p: 10}] },
+                // Q16-20
+                { q: "Something you plug in", answers: [{a: "TV", p: 45}, {a: "LAMP", p: 35}, {a: "PHONE CHARGER", p: 10}, {a: "TOASTER", p: 10}] },
+                { q: "A green vegetable", answers: [{a: "BROCCOLI", p: 55}, {a: "PEAS", p: 25}, {a: "SPINACH", p: 10}, {a: "GREEN BEANS", p: 10}] },
+                { q: "Something you carry in your pocket", answers: [{a: "PHONE", p: 50}, {a: "KEYS", p: 30}, {a: "WALLET", p: 15}, {a: "CASH", p: 5}] },
+                { q: "A word that rhymes with 'cat'", answers: [{a: "HAT", p: 40}, {a: "BAT", p: 30}, {a: "MAT", p: 20}, {a: "SAT", p: 10}] },
+                { q: "A famous cartoon character", answers: [{a: "MICKEY MOUSE", p: 50}, {a: "BUGS BUNNY", p: 30}, {a: "HOMER SIMPSON", p: 15}, {a: "SCOOBY DOO", p: 5}] },
+                // Q21-25
+                { q: "A white food", answers: [{a: "MILK", p: 40}, {a: "RICE", p: 30}, {a: "SUGAR", p: 20}, {a: "POTATO", p: 10}] },
+                { q: "Something that needs gas", answers: [{a: "CAR", p: 60}, {a: "LAWNMOWER", p: 20}, {a: "BOAT", p: 10}, {a: "MOTORCYCLE", p: 10}] },
+                { q: "A liquid found in the kitchen", answers: [{a: "WATER", p: 50}, {a: "MILK", p: 30}, {a: "ORANGE JUICE", p: 15}, {a: "OIL", p: 5}] },
+                { q: "A popular board game", answers: [{a: "MONOPOLY", p: 55}, {a: "SCRABBLE", p: 25}, {a: "CHESS", p: 10}, {a: "RISK", p: 10}] },
+                { q: "Something you see in the sky", answers: [{a: "CLOUDS", p: 40}, {a: "SUN", p: 30}, {a: "AIRPLANE", p: 20}, {a: "MOON", p: 10}] },
+                // Q26-30
+                { q: "A farm animal", answers: [{a: "COW", p: 40}, {a: "PIG", p: 30}, {a: "CHICKEN", p: 20}, {a: "SHEEP", p: 10}] },
+                { q: "A color in the rainbow", answers: [{a: "RED", p: 35}, {a: "BLUE", p: 30}, {a: "GREEN", p: 20}, {a: "YELLOW", p: 15}] },
+                { q: "Something you find in a classroom", answers: [{a: "CHALKBOARD", p: 40}, {a: "DESK", p: 30}, {a: "PENCIL", p: 15}, {a: "BOOKS", p: 15}] },
+                { q: "A type of nut", answers: [{a: "PEANUT", p: 45}, {a: "ALMOND", p: 30}, {a: "WALNUT", p: 15}, {a: "CASHEW", p: 10}] },
+                { q: "A US State that starts with M", answers: [{a: "MASSACHUSETTS", p: 35}, {a: "MICHIGAN", p: 30}, {a: "MAINE", p: 20}, {a: "MISSOURI", p: 15}] },
+                // Q31 (Extra)
+                { q: "A word associated with money", answers: [{a: "CASH", p: 45}, {a: "DOLLAR", p: 30}, {a: "WEALTH", p: 15}, {a: "RICH", p: 10}] },
+
+            ]
+        };
+
+        // --- GAME STATE AND DOM REFERENCES ---
+        let currentRound = 0; // 0 = pre-game, 1 = Round 1, 2 = Round 2, 3 = finished
+        let currentScore = 0;
+        let timerInterval = null;
+        let timeLeft = 0;
+        let tries = parseInt(localStorage.getItem('fastMoneyTries') || '0', 10);
+        
+        let roundQuestions = []; // Stores the 10 randomized questions for the current session
+
+        const DOM = {
+            totalScore: document.getElementById('total-score'),
+            triesDisplay: document.getElementById('tries-display'),
+            roundStatus: document.getElementById('round-status'),
+            timerDisplay: document.getElementById('timer-display'),
+            timerBar: document.getElementById('timer-bar'),
+            gameContainer: document.getElementById('game-container'),
+            startBtn: document.getElementById('start-round-btn'),
+            submitBtn: document.getElementById('submit-round-btn'),
+            controlPanel: document.getElementById('control-panel'),
+            resultPanel: document.getElementById('result-panel'),
+            finalMessage: document.getElementById('final-message'),
+            scoreSummary: document.getElementById('score-summary'),
+            progressionLink: document.getElementById('progression-link'),
+            retryBtn: document.getElementById('retry-btn'),
+            currentAttemptNum: document.getElementById('current-attempt-num')
+        };
+
+        // --- UTILITY FUNCTION: Random Question Selector ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function selectRandomQuestions() {
+            // 1. Shuffle the entire bank
+            const shuffledBank = [...GAME_CONFIG.SURVEY_DATA_BANK];
+            shuffleArray(shuffledBank);
+
+            // 2. Take the first 10 for this game session
+            roundQuestions = shuffledBank.slice(0, 10);
+        }
+
+
+        // --- CORE GAME FUNCTIONS ---
+
+        function initGame() {
+            // Check for penalty condition on load
+            if (tries >= GAME_CONFIG.MAX_TRIES) {
+                showFinalResult(true, "CHALLENGE MET. The portal bends to your will.", `You failed to reach the goal of ${GAME_CONFIG.SCORE_GOAL} points in ${GAME_CONFIG.MAX_TRIES} attempts, but the relentless pursuit itself unlocked the path.`);
+                return;
+            }
+
+            selectRandomQuestions(); // Select 10 new questions for this attempt
+
+            // Reset state
+            currentRound = 0;
+            currentScore = 0;
+
+            DOM.totalScore.textContent = '0';
+            DOM.triesDisplay.textContent = `${GAME_CONFIG.MAX_TRIES - tries}`;
+            
+            // Initial UI setup
+            DOM.roundStatus.textContent = `Goal: ${GAME_CONFIG.SCORE_GOAL} Points`;
+            DOM.timerDisplay.textContent = `${GAME_CONFIG.ROUND_1_TIME}s`;
+            DOM.startBtn.textContent = `Start Round 1`;
+            DOM.startBtn.classList.remove('hidden');
+            DOM.submitBtn.classList.add('hidden');
+            DOM.resultPanel.classList.add('hidden');
+
+            renderQuestions(1); // Render Round 1 questions
+        }
+
+        function startRound() {
+            if (currentRound === 0) {
+                currentRound = 1;
+                timeLeft = GAME_CONFIG.ROUND_1_TIME;
+                DOM.startBtn.classList.add('hidden');
+                DOM.submitBtn.classList.remove('hidden');
+                DOM.roundStatus.textContent = `Round 1: ${GAME_CONFIG.ROUND_1_TIME} Seconds`;
+            } else if (currentRound === 1) {
+                return; // Should not happen
+            } else if (currentRound === 2) {
+                timeLeft = GAME_CONFIG.ROUND_2_TIME;
+                DOM.startBtn.classList.add('hidden');
+                DOM.submitBtn.classList.remove('hidden');
+                DOM.roundStatus.textContent = `Round 2: ${GAME_CONFIG.ROUND_2_TIME} Seconds`;
+                
+                // Render Round 2 questions before starting timer
+                renderQuestions(2); 
+            } else {
+                return; // Game over state
+            }
+
+            // Start Timer animation
+            DOM.timerBar.style.width = '100%';
+            DOM.timerBar.style.transitionDuration = `${timeLeft}s`;
+            
+            setTimeout(() => {
+                DOM.timerBar.style.width = '0%';
+            }, 50); 
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                DOM.timerDisplay.textContent = `${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    submitRound(); // Timer ran out, auto submit
+                }
+            }, 1000);
+        }
+
+        function submitRound() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            DOM.submitBtn.classList.add('hidden');
+            DOM.timerBar.style.transitionDuration = '0s'; // Stop animation
+
+            const isRound1 = currentRound === 1;
+            const startQIndex = isRound1 ? 0 : 5;
+            const roundQuestionsSlice = roundQuestions.slice(startQIndex, startQIndex + 5);
+            
+            let roundScore = 0;
+            
+            roundQuestionsSlice.forEach((q, index) => {
+                const qNum = startQIndex + index + 1;
+                const inputElement = document.getElementById(`q-${qNum}`);
+                const answerText = inputElement ? inputElement.value.toUpperCase().trim() : '';
+                
+                let points = 0;
+
+                // Check against survey answers
+                for (const survey of q.answers) {
+                    if (survey.a === answerText) {
+                        points = survey.p;
+                        break;
+                    }
+                }
+                
+                const answerBox = inputElement ? inputElement.closest('.answer-box') : null;
+                const scoreDisplay = document.getElementById(`s-${qNum}`);
+                
+                if (points > 0) {
+                    roundScore += points;
+                    if (answerBox) answerBox.classList.add('reveal-match', 'animate-fade-in-up');
+                    if (scoreDisplay) scoreDisplay.textContent = points;
+                } else {
+                    if (answerBox) answerBox.classList.add('reveal-miss', 'animate-fade-in-up');
+                    if (scoreDisplay) scoreDisplay.textContent = 'X';
+                }
+
+                // Disable input after submission
+                if(inputElement) inputElement.disabled = true;
+            });
+
+            currentScore += roundScore;
+            DOM.totalScore.textContent = currentScore;
+
+            if (isRound1) {
+                // Move to Round 2 prompt
+                updateGameState(2, `Round 1 Score: ${roundScore}. Total: ${currentScore}. Ready for Round 2?`);
+                DOM.startBtn.textContent = `Start Round 2`;
+                DOM.startBtn.classList.remove('hidden');
+
+            } else {
+                // Game Finished - Final Scoring
+                checkFinalResult();
+            }
+        }
+
+        function checkFinalResult() {
+            currentRound = 3; // Final state
+            
+            if (currentScore >= GAME_CONFIG.SCORE_GOAL) {
+                // SUCCESS: Reset tries and show win screen
+                localStorage.setItem('fastMoneyTries', '0');
+                showFinalResult(true, "200 POINTS! YOU WIN!", `The final score is ${currentScore} points. You have achieved Fast Money!`);
+            } else {
+                // FAILURE: Increment tries
+                tries++;
+                localStorage.setItem('fastMoneyTries', tries.toString());
+                DOM.triesDisplay.textContent = `${GAME_CONFIG.MAX_TRIES - tries}`;
+
+                if (tries >= GAME_CONFIG.MAX_TRIES) {
+                    // PENALTY = PROGRESSION
+                    showFinalResult(true, "CHALLENGE MET. The portal bends to your will.", `You failed to reach the goal of ${GAME_CONFIG.SCORE_GOAL} points in ${GAME_CONFIG.MAX_TRIES} attempts, but the relentless pursuit itself unlocked the path.`);
+                } else {
+                    // Show retry screen
+                    DOM.currentAttemptNum.textContent = tries + 1;
+                    showFinalResult(false, "NOT ENOUGH POINTS.", `The final score is ${currentScore}. Try again to reach ${GAME_CONFIG.SCORE_GOAL} points.`);
+                }
+            }
+        }
+
+        function showFinalResult(isSuccess, title, summary) {
+            // Hide questions/controls
+            DOM.gameContainer.innerHTML = '';
+            DOM.controlPanel.classList.add('hidden');
+
+            // Show result panel
+            DOM.resultPanel.classList.remove('hidden');
+            DOM.finalMessage.textContent = title;
+            DOM.scoreSummary.textContent = summary;
+
+            if (isSuccess) {
+                // Win Condition or 3rd Failure Progression
+                DOM.progressionLink.href = GAME_CONFIG.NEXT_LEVEL_URL;
+                DOM.progressionLink.classList.remove('hidden');
+                DOM.finalMessage.classList.add('text-green-400');
+            } else {
+                // Failure, but can retry
+                DOM.retryBtn.classList.remove('hidden');
+                DOM.finalMessage.classList.add('text-red-400');
+            }
+            
+            lucide.createIcons();
+        }
+
+        function updateGameState(round, message) {
+            DOM.gameContainer.innerHTML = '';
+            DOM.gameMessage.textContent = message;
+        }
+
+        // --- RENDER FUNCTIONS ---
+        
+        function renderQuestions(round) {
+            const startQIndex = round === 1 ? 0 : 5;
+            const roundQuestionsSlice = roundQuestions.slice(startQIndex, startQIndex + 5);
+
+            let html = '';
+            
+            roundQuestionsSlice.forEach((q, index) => {
+                const qNum = startQIndex + index + 1;
+                
+                // Determine if input should be disabled (e.g., if round 1 was completed)
+                const isDisabled = currentRound > 0 && currentRound !== round;
+                const isRoundStarting = currentRound === 0;
+
+                html += `
+                    <div class="answer-box flex items-center bg-gray-700 rounded-lg p-3 mb-4 shadow-md">
+                        <div class="w-8 h-8 flex items-center justify-center bg-gray-900 text-yellow-400 font-extrabold rounded-full mr-4">${qNum}</div>
+                        
+                        <div class="flex-grow">
+                            <label class="block text-sm font-semibold mb-1">${q.q}</label>
+                            <input 
+                                type="text" 
+                                id="q-${qNum}" 
+                                placeholder="Your Answer Here" 
+                                class="w-full bg-gray-900 text-white border border-gray-600 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                                autocomplete="off"
+                                ${isDisabled && !isRoundStarting ? 'disabled' : ''}
+                            >
+                        </div>
+                        
+                        <div class="score-box w-16 h-16 flex flex-col items-center justify-center ml-4 rounded-lg text-2xl font-black">
+                            <span id="s-${qNum}">${isDisabled ? '?' : '0'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            DOM.gameContainer.innerHTML = html;
+        }
+
+        // --- EXECUTION ---
+        window.onload = initGame;
+    </script>
+    <script>
+      // Automatically replace lucide icons after the DOM is rendered
+      lucide.createIcons();
+    </script>
+</body>
+</html>
