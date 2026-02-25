@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Flame Portal Unlocked</title>
+<style>
+body {
+  background: radial-gradient(circle at center, #3d1c00, #120700);
+  font-family: Georgia, serif;
+  text-align: center;
+  padding-top: 90px;
+  color: #ffd7a3;
+}
+
+/* Flame flicker animation */
+@keyframes flameFlicker {
+  0%   { box-shadow: 0 0 25px #ffae42, 0 0 55px #ff7800; }
+  50%  { box-shadow: 0 0 40px #ffd37b, 0 0 85px #ff9a00; }
+  100% { box-shadow: 0 0 25px #ffae42, 0 0 55px #ff7800; }
+}
+
+h1 {
+  font-size: 46px;
+  color: #ffcf91;
+  text-shadow: 0 0 15px #ff9a00, 0 0 30px #ff7800;
+}
+
+p {
+  font-size: 20px;
+}
+
+/* Portal Button */
+button {
+  background: linear-gradient(180deg, #ffcf91, #ff9a00);
+  color: #000;
+  font-size: 24px;
+  padding: 18px 36px;
+  font-weight: bold;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  margin-top: 40px;
+  animation: flameFlicker 1.7s infinite ease-in-out;
+  transition: transform 0.15s ease-out;
+}
+
+button:hover {
+  transform: scale(1.08);
+}
+
+.fire-base {
+  margin: 0 auto;
+  margin-top: 40px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #ffb36a, #ff8a00 70%, #4d1a00);
+  box-shadow: 0 0 70px #ff8800, 0 0 120px #ff6a00;
+  animation: flameFlicker 1.8s infinite ease-in-out;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 THE FLAME PORTAL IGNITES 🔥</h1>
+<p>You have earned access to the next chamber...</p>
+
+<div class="fire-base"></div>
+
+<a href="next-chamber.html">
+  <button>ENTER THE FLAME PORTAL →</button>
+</a>
+
+</body>
+</html>
