@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Solar Observatory Checkpoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-yellow-400 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global configuration variables MUST be used
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Checkpoint-specific configuration
+        const CHECKPOINT_ID = "the-solar-observatory-003"; // Unique ID for this checkpoint
+        const SECRET_CODE = "AURORA88"; // The secret code to unlock this checkpoint
+        const NEXT_CLUE_URL = "https://example.com/treasure-vault-complete"; // URL for the final destination
+
+        let db, auth, storage, userId;
+
+        // Utility to display messages to the user (instead of alert)
+        function showMessage(message, isError = false) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.className = isError
+                ? 'p-3 rounded-lg text-red-400 bg-red-900 border border-red-500 shadow-xl'
+                : 'p-3 rounded-lg text-green-400 bg-green-900 border border-green-500 shadow-xl';
+            setTimeout(() => messageBox.textContent = '', 5000);
+        }
+
+        // Authentication and Initialization
+        async function initializeAppAndAuth() {
+            if (!firebaseConfig) {
+                showMessage("Firebase configuration missing. Cannot save progress.", true);
+                return;
+            }
+
+            try {
+                // setLogLevel('Debug'); // Uncomment for debugging Firestore
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                storage = getStorage(app);
+
+                // Authenticate the user
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = `User ID: ${userId}`;
+                        setupRealtimeListener();
+                    } else {
+                        showMessage("Authentication failed. Progress will not be saved.", true);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication error:", error);
+                showMessage("Failed to connect to the core nexus. Check the console for details.", true);
+            }
+        }
+
+        // Firestore Listener
+        function setupRealtimeListener() {
+            if (!db || !userId) return;
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            onSnapshot(checkpointRef, (docSnap) => {
+                const statusElement = document.getElementById('checkpoint-status');
+                const portalElement = document.getElementById('portal-link');
+
+                if (docSnap.exists() && docSnap.data().completed) {
+                    statusElement.textContent = "Status: Checkpoint Cleared (Solar Flare Detected)";
+                    statusElement.classList.remove('text-yellow-400');
+                    statusElement.classList.add('text-purple-400', 'font-bold');
+                    
+                    portalElement.classList.remove('hidden');
+                    portalElement.onclick = () => window.location.href = NEXT_CLUE_URL;
+
+                    document.getElementById('challenge-area').classList.add('hidden');
+                    document.getElementById('completion-area').classList.remove('hidden');
+                } else {
+                    statusElement.textContent = "Status: Awaiting Activation";
+                    statusElement.classList.add('text-yellow-400');
+                    statusElement.classList.remove('text-purple-400', 'font-bold');
+
+                    document.getElementById('challenge-area').classList.remove('hidden');
+                    document.getElementById('completion-area').classList.add('hidden');
+                }
+            });
+        }
+
+        // Core Completion Logic
+        async function completeCheckpoint(method, value) {
+            if (!userId) {
+                showMessage("Authentication not ready. Please wait a moment.", true);
+                return;
+            }
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            try {
+                // Save evidence and mark as complete
+                await setDoc(checkpointRef, {
+                    completed: true,
+                    completionTime: new Date().toISOString(),
+                    verificationMethod: method,
+                    value: value,
+                }, { merge: true });
+
+                showMessage("Checkpoint activated! Solar flare detected, ready for transmission.");
+            } catch (e) {
+                console.error("Error completing checkpoint:", e);
+                showMessage("Failed to log progress to Firestore. See console.", true);
+            }
+        }
+
+        // Handlers for the UI
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppAndAuth();
+
+            // Code Submission Logic
+            document.getElementById('code-submit-btn').addEventListener('click', async () => {
+                const codeInput = document.getElementById('code-input');
+                const enteredCode = codeInput.value.trim().toUpperCase();
+
+                if (enteredCode === SECRET_CODE) {
+                    await completeCheckpoint('code_entry', enteredCode);
+                } else {
+                    showMessage("Transmission Error: The signature does not match the Aurora Protocol.", true);
+                }
+            });
+
+            // Image Upload Logic
+            document.getElementById('image-upload-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('image-file');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    showMessage("Please select an image file to upload.", true);
+                    return;
+                }
+
+                if (!storage) {
+                    showMessage("Storage service is unavailable.", true);
+                    return;
+                }
+
+                const loadingIndicator = document.getElementById('image-loading');
+                loadingIndicator.classList.remove('hidden');
+                document.getElementById('image-upload-btn').disabled = true;
+
+                try {
+                    // Create a unique file path for the image
+                    const filePath = `artifacts/${appId}/evidence/${userId}/${CHECKPOINT_ID}/${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, filePath);
+
+                    // Upload the file
+                    const snapshot = await uploadBytes(storageRef, file);
+                    
+                    // Get the public URL
+                    const imageUrl = await getDownloadURL(snapshot.ref);
+
+                    // Complete the checkpoint with the image URL
+                    await completeCheckpoint('image_upload', imageUrl);
+
+                } catch (error) {
+                    console.error("Image upload failed:", error);
+                    showMessage("Image evidence upload failed. Please try a smaller file.", true);
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    document.getElementById('image-upload-btn').disabled = false;
+                }
+            });
+
+            // Tab Switching Logic
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Deactivate all tabs and hide all contents
+                    tabs.forEach(t => t.classList.remove('bg-purple-500', 'text-gray-900'));
+                    tabs.forEach(t => t.classList.add('hover:bg-purple-700', 'bg-gray-800'));
+                    contents.forEach(c => c.classList.add('hidden'));
+
+                    // Activate selected tab and show content
+                    tab.classList.add('bg-purple-500', 'text-gray-900');
+                    tab.classList.remove('bg-gray-800', 'hover:bg-purple-700');
+                    document.getElementById(tab.dataset.tab).classList.remove('hidden');
+                });
+            });
+            // Initialize the first tab (Code Entry) as active
+            document.getElementById('code-tab').click();
+
+        });
+    </script>
+
+    <!-- Main Content Card -->
+    <div class="w-full max-w-xl bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-10 border border-purple-600/50">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-yellow-400 drop-shadow-lg">
+                The Solar Observatory
+            </h1>
+            <p class="text-xl mt-2 text-purple-300">Checkpoint 003: Aurora Protocol</p>
+            <div id="user-id-display" class="text-xs mt-2 text-gray-400"></div>
+        </header>
+
+        <!-- Status Display -->
+        <div class="mb-6 p-4 rounded-xl bg-gray-950 border border-purple-900">
+            <p id="checkpoint-status" class="text-lg text-center font-semibold text-yellow-400">
+                Status: Awaiting Stellar Calibration...
+            </p>
+        </div>
+
+        <!-- Message Box for Feedback -->
+        <div id="message-box" class="h-10 text-center transition-all duration-300 mb-4"></div>
+
+        <!-- CHALLENGE AREA (Hidden when complete) -->
+        <div id="challenge-area">
+            
+            <p class="text-center text-purple-300 mb-6">
+                Initiate the Aurora Protocol by inputting the required signature or uploading the thermal scan evidence.
+            </p>
+
+            <!-- Tabs -->
+            <div class="flex space-x-2 p-1 bg-gray-950 rounded-lg mb-6">
+                <button data-tab="code-entry" id="code-tab" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                    Signature Code
+                </button>
+                <button data-tab="image-upload" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                    Thermal Scan Upload
+                </button>
+            </div>
+
+            <!-- Tab Content: Code Entry -->
+            <div id="code-entry" class="tab-content">
+                <div class="p-6 bg-gray-950 rounded-xl border border-purple-600/20 shadow-inner">
+                    <label for="code-input" class="block text-sm font-medium text-yellow-400 mb-2">Enter Signature Code (Hint: Aurora)</label>
+                    <input type="text" id="code-input" placeholder="Type the secret code here" class="w-full p-3 rounded-lg bg-gray-900 text-yellow-300 border border-gray-700 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-600 shadow-md">
+                    <button id="code-submit-btn" class="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Execute Protocol
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content: Image Upload -->
+            <div id="image-upload" class="tab-content hidden">
+                <div class="p-6 bg-gray-950 rounded-xl border border-purple-600/20 shadow-inner">
+                    <label for="image-file" class="block text-sm font-medium text-yellow-400 mb-2">Upload Thermal Scan</label>
+                    <input type="file" id="image-file" accept="image/*" class="block w-full text-sm text-yellow-400
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-purple-500 file:text-white
+                        hover:file:bg-purple-600
+                    ">
+                    <button id="image-upload-btn" class="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Transmit Data
+                    </button>
+                    <div id="image-loading" class="hidden mt-3 text-center text-yellow-400">
+                        <svg class="animate-spin h-5 w-5 mr-3 inline text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Transmitting...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLETION AREA (Shown when complete) -->
+        <div id="completion-area" class="hidden text-center p-8 bg-gray-950 rounded-xl border border-purple-600/20 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-yellow-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <h2 class="text-3xl font-bold text-yellow-400 mb-4">Protocol Complete!</h2>
+            <p class="text-purple-300 mb-6">
+                Stellar drift calculations complete. Proceed immediately to the final location to secure the reward.
+            </p>
+            <button id="portal-link" class="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-extrabold rounded-xl text-lg transition-transform transform hover:scale-105 shadow-xl">
+                ACCESS THE TREASURE VAULT (FINAL)
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
