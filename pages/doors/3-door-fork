@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Three Choices Portal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for ancient/runic look */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(145deg, #1f1f1f 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d1b89e; /* Aged paper/metal color */
+            padding: 20px;
+        }
+
+        /* Door Card Styling */
+        .mystery-door {
+            background-color: #2c2c2c;
+            border: 4px solid #4a4a4a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px #6366f1; /* Subtle purple glow */
+            transition: all 0.4s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            transform: translateY(0);
+        }
+
+        .mystery-door:hover {
+            border-color: #6366f1;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), 0 0 30px #818cf8;
+            transform: translateY(-5px) scale(1.03);
+        }
+
+        .mystery-symbol {
+            font-size: 8rem;
+            line-height: 1;
+            text-shadow: 0 0 15px #fcd34d; /* Golden shadow */
+            color: #fbbf24; /* Amber/Gold color */
+            transition: transform 0.3s ease;
+        }
+        
+        .mystery-door:hover .mystery-symbol {
+            transform: scale(1.1);
+        }
+
+        .door-label {
+            letter-spacing: 3px;
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Message Box for interaction feedback */
+        .notification-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            background-color: #fcd34d;
+            color: #1f2937;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .notification-box.visible {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .mystery-symbol {
+                font-size: 6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="notification-box" class="notification-box"></div>
+
+    <div class="max-w-6xl mx-auto p-4 sm:p-8 text-center">
+        <header class="mb-16">
+            <h1 class="text-5xl sm:text-7xl font-black text-indigo-300 mb-4 tracking-widest">
+                THE CONVERGENCE
+            </h1>
+            <p class="text-xl sm:text-2xl text-gray-400 font-bold">
+                Three choices stand before you. Only one path leads onward.
+            </p>
+        </header>
+
+        <!-- Door Grid: All doors look identical -->
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <!-- Door I -->
+            <a href="#choice-i" onclick="handleDoorClick('Door I', 'Level_1_Labyrinth.html')" 
+               class="mystery-door p-6 md:p-12 rounded-xl text-center">
+                <div class="mystery-symbol mb-4">I</div>
+                <h2 class="door-label text-xl text-gray-200">THE FIRST TRIAL</h2>
+            </a>
+
+            <!-- Door II -->
+            <a href="#choice-ii" onclick="handleDoorClick('Door II', 'Level_2_Anomaly.html')" 
+               class="mystery-door p-6 md:p-12 rounded-xl text-center">
+                <div class="mystery-symbol mb-4">II</div>
+                <h2 class="door-label text-xl text-gray-200">THE SECOND CHALLENGE</h2>
+            </a>
+
+            <!-- Door III -->
+            <a href="#choice-iii" onclick="handleDoorClick('Door III', 'Level_3_Nexus.html')" 
+               class="mystery-door p-6 md:p-12 rounded-xl text-center">
+                <div class="mystery-symbol mb-4">III</div>
+                <h2 class="door-label text-xl text-gray-200">THE FINAL GATEWAY</h2>
+            </a>
+
+        </div>
+
+        <footer class="mt-16 text-gray-500 text-lg">
+            <p>Once you choose, there is no turning back.</p>
+        </footer>
+    </div>
+
+    <script>
+        /**
+         * Handles the click event for the mystery doors.
+         * Shows a notification and simulates the progression link.
+         * @param {string} doorName - The name of the door (e.g., "Door I").
+         * @param {string} destination - The simulated progression link/file.
+         */
+        const handleDoorClick = (doorName, destination) => {
+            const messageBox = document.getElementById('notification-box');
+            
+            // 1. Show message instead of alert()
+            messageBox.textContent = `Accessing ${doorName}... Initializing data stream to ${destination}...`;
+            messageBox.classList.add('visible');
+            
+            // 2. Add temporary visual feedback to the chosen door
+            const targetDoor = event.currentTarget; // The clicked anchor element
+            targetDoor.classList.add('animate-pulse', 'bg-red-900/50'); 
+
+            // 3. Simulate progression after a delay
+            setTimeout(() => {
+                // In a real application, this is where window.location.href would change.
+                // For this preview, we'll just remove the message and animation class.
+                messageBox.classList.remove('visible');
+                targetDoor.classList.remove('animate-pulse', 'bg-red-900/50');
+                
+                console.log(`Simulated navigation to: ${destination}`);
+            }, 3000); 
+        };
+    </script>
+
+</body>
+</html>
