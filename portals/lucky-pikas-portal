@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Pikas Portal Access</title>
+
+<style>
+/* GLOBAL THEME ------------------------------------------------------ */
+body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at center, #1a0f00 0%, #000000 100%);
+    font-family: 'Trebuchet MS', sans-serif;
+    color: #ffd86b;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* COSMIC BACKGROUND ------------------------------------------------- */
+.bg-animated {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('https://i.imgur.com/3v6wYke.jpeg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.32) blur(4px);
+    animation: cosmicDrift 28s ease-in-out infinite alternate;
+    z-index: -2;
+}
+
+@keyframes cosmicDrift {
+    0% { transform: scale(1) translateY(0px); }
+    100% { transform: scale(1.25) translateY(-50px); }
+}
+
+/* FLOATING TREASURE PARTICLES -------------------------------------- */
+.spark-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.spark {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: gold;
+    border-radius: 50%;
+    box-shadow: 0 0 12px gold;
+    opacity: 0.85;
+    animation: driftUp 7s linear infinite;
+}
+
+@keyframes driftUp {
+    from { transform: translateY(100vh); opacity: 0.2; }
+    to { transform: translateY(-10vh); opacity: 1; }
+}
+
+/* LUCKY PIKAS STAR -------------------------------------------------- */
+.star-emblem {
+    width: 280px;
+    height: 280px;
+    margin: 50px auto 0;
+    background: radial-gradient(circle, #ffeaa7 0%, #ffca3a 40%, #ff9900 100%);
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 
+        0 0 25px #ffce47,
+        0 0 55px #ffb300,
+        inset 0 0 25px #fff8b3;
+    animation: starPulse 3s infinite ease-in-out;
+}
+
+@keyframes starPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px #ffd347, inset 0 0 25px #fff6b2; }
+    50% { transform: scale(1.07); box-shadow: 0 0 60px #ffea7a, inset 0 0 40px #ffffff; }
+}
+
+/* Gold star overlay */
+.star-emblem::after {
+    content: "★";
+    font-size: 170px;
+    color: #fff9d6;
+    text-shadow: 
+        0 0 18px #ffeb85,
+        0 0 35px #ffcc2c,
+        0 0 60px gold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -56%);
+}
+
+/* TITLE ------------------------------------------------------------- */
+h1 {
+    font-size: 58px;
+    letter-spacing: 2px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #ffe5a4;
+    text-shadow: 0 0 15px gold, 0 0 45px #ffdf66;
+    animation: glowPop 2.4s infinite ease-in-out;
+}
+
+@keyframes glowPop {
+    0%, 100% { text-shadow: 0 0 15px gold, 0 0 45px #ffdf66; }
+    50% { text-shadow: 0 0 40px #ffee94, 0 0 60px gold; }
+}
+
+p {
+    font-size: 22px;
+    color: #fff0c2;
+    text-shadow: 0 0 5px #000;
+}
+
+/* PORTAL BUTTON ----------------------------------------------------- */
+.portal-btn {
+    background: linear-gradient(135deg, #ffe583, #ffca28);
+    color: black;
+    padding: 20px 48px;
+    font-size: 28px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 0 30px #ffcf5c;
+    transition: 0.3s ease;
+    margin-top: 30px;
+}
+
+.portal-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 45px #ffe28a;
+}
+
+/* SECRET HIDDEN LINK ----------------------------------------------- */
+.secret-link {
+    position: fixed;
+    bottom: 14px;
+    right: 14px;
+    font-size: 16px;
+    opacity: 0.15;
+    cursor: pointer;
+    transition: 0.3s ease;
+    color: #fff;
+}
+
+.secret-link:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Background -->
+<div class="bg-animated"></div>
+
+<!-- Floating Gold Sparks -->
+<div class="spark-container">
+<script>
+for (let i = 0; i < 40; i++) {
+    const s = document.createElement("div");
+    s.classList.add("spark");
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.animationDelay = Math.random() * 5 + "s";
+    s.style.background = ["gold", "#ffdf6b", "#fff4cc"][Math.floor(Math.random()*3)];
+    s.style.opacity = Math.random() * 0.7 + 0.3;
+    document.querySelector(".spark-container").appendChild(s);
+}
+</script>
+</div>
+
+<!-- LUCKY PIKAS STAR EMBLEM -->
+<div class="star-emblem"></div>
+
+<!-- Title + Message -->
+<h1>✨ LUCKY PIKAS PORTAL ✨</h1>
+<p>Your treasure sense tingles… the gateway accepts you.</p>
+
+<!-- Portal Button -->
+<a href="next-page.html">
+    <button class="portal-btn">ENTER PORTAL →</button>
+</a>
+
+<!-- Hidden Link -->
+<a class="secret-link" href="next-page.html">⚡</a>
+
+</body>
+</html>
