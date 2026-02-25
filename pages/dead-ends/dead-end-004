@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead End: The Vault Prison</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c0a09; /* Deep black */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #f3f4f6;
+            padding: 20px;
+        }
+
+        .vault-door {
+            background-color: #3f3f46; /* Grayish metal base */
+            border: 8px solid #1c1917; /* Strong outer frame */
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bars-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            padding: 10px 0;
+            /* Creates a gradient overlay for depth */
+            background: linear-gradient(to right, rgba(0,0,0,0.5), transparent 20%, transparent 80%, rgba(0,0,0,0.5));
+        }
+
+        .bar {
+            width: 15px;
+            height: 100%;
+            background-color: #262626; /* Darker bar color */
+            border-left: 1px solid #71717a;
+            border-right: 1px solid #171717;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.7);
+            /* Tilt bars slightly for a more imposing look */
+            transform: skewX(-5deg);
+        }
+
+        .warning-message {
+            z-index: 10;
+            background-color: rgba(39, 39, 42, 0.9); /* Dark overlay */
+            border: 3px solid #facc15; /* Yellow warning frame */
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        .back-button {
+            background-color: #3b82f6;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #2563eb;
+        }
+        .back-button:hover {
+            background-color: #2563eb;
+        }
+        .back-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vault-door flex flex-col justify-center items-center p-8 rounded-lg max-w-lg w-full h-96">
+        <div class="bars-container">
+            <!-- Create 12 iron bars -->
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <div class="warning-message p-6 rounded-lg text-center space-y-4">
+            <h1 class="text-4xl font-extrabold text-yellow-300 uppercase tracking-wider">
+                ACCESS DENIED
+            </h1>
+            <p class="text-xl text-gray-200 font-semibold">
+                This is a holding cell. No key, no passage.
+            </p>
+            <p class="text-sm text-gray-400">
+                // Re-evaluate your previous choices //
+            </p>
+        </div>
+
+        <button onclick="goBack()" class="back-button mt-10 px-8 py-3 rounded-lg font-bold text-white text-lg">
+            &lt; GO BACK
+        </button>
+    </div>
+
+    <script>
+        function goBack() {
+            // This function takes the player to the previous page in their browser history.
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
