@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Devil's Bargain or The Witch's Pact</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a gothic/horror feel */
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Cinzel+Decorative:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Cinzel Decorative', serif;
+            /* Eerie fog/shadow background */
+            background: radial-gradient(circle at center, #111111 0%, #000000 70%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d1b89e; /* Faded bone/parchment color */
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* Container for the dual choices - FORCED SIDE-BY-SIDE */
+        .choice-container {
+            display: flex;
+            flex-direction: row; /* Ensure horizontal layout */
+            gap: 1.5rem; /* Space between the two portals */
+            width: 90%;
+            max-width: 1000px;
+            height: 90vh; /* Control height to ensure no scroll */
+            margin: auto;
+        }
+
+        /* Styling for the Devil and Witch panels */
+        .portal-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around; /* Distribute space evenly */
+            padding: 1rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            transition: all 0.4s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid;
+            min-width: 150px; /* Prevent collapse on very small screens */
+            height: 100%; /* Take full height of parent */
+        }
+        
+        /* DEVIL Theme - Deep Red and Shadow */
+        .devil-theme {
+            background: linear-gradient(to top, #3b0707 0%, #170000 100%);
+            border-color: #991b1b;
+            box-shadow: 0 0 30px rgba(153, 27, 27, 0.5);
+        }
+        .devil-theme:hover {
+            transform: scale(1.03);
+            border-color: #ef4444; /* Bright red hover */
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.8);
+        }
+        
+        /* WITCH Theme - Sickly Green and Deep Purple */
+        .witch-theme {
+            background: linear-gradient(to bottom, #101715 0%, #064e3b 100%);
+            border-color: #065f46;
+            box-shadow: 0 0 30px rgba(6, 95, 70, 0.5);
+        }
+        .witch-theme:hover {
+            transform: scale(1.03);
+            border-color: #10b981; /* Bright green hover */
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.8);
+        }
+
+        .portal-title {
+            font-family: 'Creepster', cursive; /* Scary font for titles */
+            font-size: 2rem;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.9);
+            line-height: 1.1;
+        }
+        
+        .portal-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .emoji-icon {
+            font-size: 5rem;
+            line-height: 1;
+            padding: 1rem;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.3);
+            transition: transform 0.4s ease;
+        }
+        
+        .portal-panel:hover .emoji-icon {
+            transform: rotate(10deg) scale(1.1);
+        }
+        
+        /* Responsive adjustments for extremely small screens (e.g., iPhone SE) */
+        @media (max-width: 500px) {
+            .choice-container {
+                gap: 0.5rem;
+                height: 85vh;
+            }
+            .portal-panel {
+                padding: 0.75rem;
+                justify-content: space-around;
+            }
+            .portal-title {
+                font-size: 1.5rem;
+            }
+            .emoji-icon {
+                font-size: 3.5rem;
+            }
+            .portal-subtitle {
+                font-size: 0.75rem;
+                padding-bottom: 0.5rem;
+            }
+        }
+
+        /* Message Box for interaction feedback (Same as before) */
+        .feedback-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.75rem 1.5rem;
+            background-color: #fcd34d;
+            color: #1f2937;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .feedback-message.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="feedback-message" class="feedback-message"></div>
+
+    <div class="choice-container">
+
+        <!-- LEFT PORTAL: THE DEVIL -->
+        <a href="#devil-choice" onclick="handleDoorClick('The Devil\'s Domain', 'Infernal_Descent.html')" 
+           class="portal-panel devil-theme group">
+            
+            <div>
+                <h1 class="portal-title text-red-500">
+                    THE DEVIL'S BARGAIN
+                </h1>
+                <p class="portal-subtitle text-red-300 font-bold tracking-wider">
+                    The path of immediate power.
+                </p>
+            </div>
+            
+            <div class="emoji-icon">😈</div>
+            
+            <p class="text-base text-red-300 font-bold tracking-wider">
+                Embrace the shadow.
+            </p>
+        </a>
+
+        <!-- RIGHT PORTAL: THE WITCH -->
+        <a href="#witch-choice" onclick="handleDoorClick('The Witch\'s Coven', 'Arcane_Coven.html')" 
+           class="portal-panel witch-theme group">
+
+            <div>
+                <h1 class="portal-title text-green-400">
+                    THE WITCH'S PACT
+                </h1>
+                <p class="portal-subtitle text-green-300 font-bold tracking-wider">
+                    The path of hidden knowledge.
+                </p>
+            </div>
+            
+            <div class="emoji-icon">🧙‍♀️</div>
+            
+            <p class="text-base text-green-300 font-bold tracking-wider">
+                Seek the ancient ritual.
+            </p>
+        </a>
+
+    </div>
+
+    <script>
+        /**
+         * Handles the click event for the dual portals.
+         * Shows a notification and simulates the progression link.
+         * @param {string} pathName - The name of the chosen path.
+         * @param {string} destination - The simulated progression link/file.
+         */
+        const handleDoorClick = (pathName, destination) => {
+            const messageBox = document.getElementById('feedback-message');
+            
+            // 1. Show message instead of alert()
+            messageBox.textContent = `Path Chosen: ${pathName}. Initiating transport to ${destination}...`;
+            messageBox.classList.add('visible');
+            
+            // 2. Add temporary visual feedback (subtle shake or pulse)
+            const targetPanel = event.currentTarget;
+            // Prevent transition conflict with the hover effect
+            targetPanel.style.transition = 'none'; 
+            targetPanel.style.transform = 'scale(1.05)';
+            
+            // 3. Remove feedback and reset door after a delay
+            setTimeout(() => {
+                messageBox.classList.remove('visible');
+                targetPanel.style.transform = 'scale(1)';
+                targetPanel.style.transition = 'all 0.4s ease-in-out'; // Restore transition
+                
+                // In a real application, this is where window.location.href would change.
+                console.log(`Simulated navigation to: ${destination}`);
+            }, 2500); 
+        };
+    </script>
+</body>
+</html>
