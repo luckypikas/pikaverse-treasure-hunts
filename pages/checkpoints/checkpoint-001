@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sentinel Nexus Checkpoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Define the "Inter" font for a modern look */
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Dark, high-contrast, sci-fi theme */
+        .sentinel-bg {
+            background-color: #0d1117; /* GitHub Dark theme background */
+            background-image: radial-gradient(circle at center, #1b263b 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* The main checkpoint card - floating and luminous */
+        .nexus-card {
+            background: rgba(17, 24, 39, 0.9); /* Dark semi-transparent background */
+            backdrop-filter: blur(8px);
+            border: 2px solid #3b82f6; /* Blue border */
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(239, 68, 68, 0.3); /* Dual-color glow */
+        }
+        
+        /* Neon effect for active tabs/titles */
+        .neon-glow {
+            text-shadow: 0 0 5px #3b82f6, 0 0 10px #3b82f6;
+        }
+
+        /* Pulsing animation for active elements */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4); }
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #fcd34d; /* Gold line */
+            color: #fcd34d;
+            font-weight: 700;
+        }
+        
+        /* Custom file input styling */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* Shake animation for input errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake-animation { 
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; 
+            border-color: #ef4444; /* Red border on error */
+        }
+    </style>
+</head>
+<body class="min-h-screen sentinel-bg text-white font-sans flex items-center justify-center p-4">
+
+    <!-- Firebase Imports and Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURATION ---
+        const CHECKPOINT_ID = 'sentinel-nexus-001';
+        // --- DEFINE THE SECRET CODE HERE (CASE INSENSITIVE) ---
+        const SECRET_CODE = 'CRYPTEXT342'; 
+        // --- NEXT DESTINATION URL (Replace with your actual next clue!) ---
+        const NEXT_CLUE_URL = "https://example.com/next-scavenger-hunt-challenge-2";
+
+        // Global Firebase Variables (Provided by Canvas)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        setLogLevel('Debug'); // Enable logging for debugging
+
+        // Initialize Firebase
+        let app, db, auth, storage;
+        let userId = null;
+        let isAuthReady = false;
+        
+        // DOM Elements
+        const DOM = {
+            message: document.getElementById('status-message'),
+            checkpointCard: document.getElementById('checkpoint-card'),
+            // Tabs
+            tabImage: document.getElementById('tab-image'),
+            tabCode: document.getElementById('tab-code'),
+            contentImage: document.getElementById('content-image'),
+            contentCode: document.getElementById('content-code'),
+            // Image Upload
+            fileInput: document.getElementById('image-upload'),
+            fileLabel: document.getElementById('file-label'),
+            uploadBtn: document.getElementById('upload-btn'),
+            // Code Entry
+            codeInput: document.getElementById('secret-code-input'),
+            codeBtn: document.getElementById('code-submit-btn'),
+            // Misc
+            loadingIndicator: document.getElementById('loading-spinner'),
+            authUserId: document.getElementById('auth-user-id')
+        };
+
+        // --- UTILITIES ---
+        function updateStatus(message, color = 'text-yellow-400') {
+            DOM.message.className = `mt-4 text-center text-lg font-semibold ${color} neon-glow`;
+            DOM.message.textContent = message;
+        }
+
+        function toggleContent(target) {
+            if (target === 'image') {
+                DOM.tabImage.classList.add('tab-active');
+                DOM.tabCode.classList.remove('tab-active');
+                DOM.contentImage.classList.remove('hidden');
+                DOM.contentCode.classList.add('hidden');
+            } else {
+                DOM.tabCode.classList.add('tab-active');
+                DOM.tabImage.classList.remove('tab-active');
+                DOM.contentCode.classList.remove('hidden');
+                DOM.contentImage.classList.add('hidden');
+            }
+            // Clear status message when switching tabs
+            updateStatus("Awaiting verification protocol...", 'text-gray-400');
+        }
+
+        function showLoading(isLoading) {
+            DOM.loadingIndicator.classList.toggle('hidden', !isLoading);
+            DOM.uploadBtn.disabled = isLoading;
+            DOM.codeBtn.disabled = isLoading;
+            DOM.fileInput.disabled = isLoading;
+            DOM.codeInput.disabled = isLoading;
+            // Toggle text on button
+            document.getElementById('upload-btn-text').textContent = isLoading ? 'Processing...' : 'Upload & Confirm Checkpoint';
+            document.getElementById('code-btn-text').textContent = isLoading ? 'Validating...' : 'Verify Code & Unlock Portal';
+        }
+
+        // --- FIREBASE INITIALIZATION AND AUTH ---
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    updateStatus("Error: Configuration anomaly detected.", "text-red-500");
+                    return;
+                }
+
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                storage = getStorage(app);
+
+                await new Promise(resolve => {
+                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            DOM.authUserId.textContent = userId;
+                            unsubscribe();
+                            resolve();
+                        } else {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        }
+                    });
+                });
+                isAuthReady = true;
+                await checkCheckpointStatus();
+            } catch (error) {
+                console.error("Nexus Initialization Failure:", error);
+                updateStatus(`Authentication failed. Code: ${error.code}`, "text-red-500");
+            }
+        }
+        
+        // --- CHECKPOINT LOGIC ---
+        
+        async function checkCheckpointStatus() {
+            if (!isAuthReady || !userId) return;
+
+            try {
+                // Private data path for this specific checkpoint
+                const checkpointPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+                const checkpointDocRef = doc(db, checkpointPath);
+                const docSnap = await getDoc(checkpointDocRef);
+
+                if (docSnap.exists() && docSnap.data().completed) {
+                    updateStatus("Nexus Status: ONLINE. Path unlocked.", "text-green-500");
+                    showFinalLink(docSnap.data());
+                } else {
+                    updateStatus("Awaiting verification protocol...", 'text-gray-400');
+                    toggleContent('image'); // Default to image tab
+                }
+            } catch (error) {
+                console.error("Error checking checkpoint status:", error);
+                updateStatus("System Error: Could not check prior status.", "text-red-500");
+            }
+        }
+
+        async function completeCheckpoint(method, logData) {
+            if (!isAuthReady || !userId) {
+                updateStatus("Authentication not ready. Stand by.", "text-red-500");
+                return;
+            }
+            showLoading(true);
+
+            try {
+                const checkpointData = {
+                    completed: true,
+                    method: method,
+                    completedAt: new Date().toISOString(),
+                    ...logData
+                };
+                const checkpointPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+                await setDoc(doc(db, checkpointPath), checkpointData, { merge: true });
+
+                updateStatus(`Verification Successful! Entering Portal Mode.`, "text-green-400");
+                showFinalLink(checkpointData);
+
+            } catch (error) {
+                console.error("Completion Logging Error:", error);
+                updateStatus(`Data transmission failed: ${error.message}.`, "text-red-500");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- CODE ENTRY ---
+        function verifyCode() {
+            const inputCode = DOM.codeInput.value.toUpperCase().trim();
+            if (inputCode === SECRET_CODE) {
+                completeCheckpoint('Code', { submittedCode: inputCode });
+            } else {
+                updateStatus("ACCESS DENIED: Invalid Cryptographic Key.", "text-red-500");
+                DOM.codeInput.classList.add('shake-animation');
+                setTimeout(() => DOM.codeInput.classList.remove('shake-animation'), 800);
+            }
+        }
+
+        // --- IMAGE UPLOAD ---
+        async function uploadImage() {
+            const file = DOM.fileInput.files[0];
+            if (!file) {
+                updateStatus("ERROR: No image file selected.", "text-red-500");
+                return;
+            }
+            
+            showLoading(true);
+            updateStatus(`Initiating data stream for ${file.name}...`, "text-blue-400");
+
+            // Implements exponential backoff for robust uploads
+            const MAX_RETRIES = 5;
+            let attempt = 0;
+            
+            while (attempt < MAX_RETRIES) {
+                try {
+                    const timestamp = Date.now();
+                    const storagePath = `artifacts/${appId}/checkpoints/${userId}/${CHECKPOINT_ID}_${timestamp}_${file.name}`;
+                    const storageRef = ref(storage, storagePath);
+
+                    // 1. Upload the file
+                    const snapshot = await uploadBytes(storageRef, file);
+
+                    // 2. Get the public download URL
+                    const imageURL = await getDownloadURL(snapshot.ref);
+
+                    // 3. Log completion status
+                    const logData = {
+                        imageURL: imageURL,
+                        storagePath: storagePath,
+                        fileName: file.name
+                    };
+                    await completeCheckpoint('Image', logData);
+                    return; // Exit function on success
+
+                } catch (error) {
+                    attempt++;
+                    console.warn(`Upload attempt ${attempt} failed. Retrying in ${Math.pow(2, attempt)}s...`, error);
+                    if (attempt >= MAX_RETRIES) {
+                        throw new Error(`Upload Failed after ${MAX_RETRIES} attempts.`);
+                    }
+                    // Wait using exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                }
+            }
+
+            // If we reach here, all retries failed.
+            showLoading(false);
+            updateStatus(`CRITICAL FAILURE: Image data stream could not be established.`, "text-red-500");
+        }
+        
+        // --- FINAL LINK DISPLAY ---
+        function showFinalLink(data) {
+            // Hide verification elements
+            DOM.contentImage.classList.add('hidden');
+            DOM.contentCode.classList.add('hidden');
+            DOM.tabImage.parentElement.classList.add('hidden');
+            
+            // Build the dynamic success message
+            let details = '';
+            let imageTag = '';
+            
+            if (data.method === 'Image' && data.imageURL) {
+                details = `<p class="text-gray-400 mb-4">Verification Method: Image Data Stream</p>`;
+                imageTag = `
+                    <p class="text-sm text-gray-500 mb-2">Evidence URL: <a href="${data.imageURL}" target="_blank" class="text-blue-400 hover:text-blue-300 underline break-all">${data.fileName || 'View Uploaded Image'}</a></p>
+                    <img src="${data.imageURL}" alt="Uploaded Checkpoint Image" class="w-full max-h-64 object-cover rounded-lg shadow-xl mb-6 border-2 border-green-500/50">
+                `;
+            } else if (data.method === 'Code') {
+                details = `<p class="text-gray-400 mb-4">Verification Method: Cryptographic Key Entry</p>`;
+                imageTag = `<p class="text-3xl font-mono text-green-400 mb-6">KEY: ${data.submittedCode}</p>`;
+            }
+
+            DOM.checkpointCard.innerHTML = `
+                <div class="text-center p-4">
+                    <h2 class="text-4xl font-extrabold text-green-400 neon-glow mb-4">PORTAL ACTIVE</h2>
+                    <p class="text-xl text-gray-300 mb-6">The Sentinel Nexus has confirmed your clearance.</p>
+                    ${details}
+                    ${imageTag}
+                    <a href="${NEXT_CLUE_URL}" target="_blank" class="text-xl font-bold bg-yellow-400 text-gray-900 py-3 px-8 rounded-full shadow-lg transition transform hover:scale-110 flex items-center justify-center space-x-3 mx-auto max-w-sm hover:ring-4 ring-yellow-400/50">
+                        <span>Initiate Hyper-Jump to Next Challenge</span> <i data-lucide="arrow-right"></i>
+                    </a>
+                </div>
+                <p class="text-xs text-gray-500 mt-6 pt-4 border-t border-gray-700">User ID: ${userId}</p>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- EVENT LISTENERS ---
+        DOM.uploadBtn.onclick = uploadImage;
+        DOM.codeBtn.onclick = verifyCode;
+        DOM.tabImage.onclick = () => toggleContent('image');
+        DOM.tabCode.onclick = () => toggleContent('code');
+
+        DOM.fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                DOM.fileLabel.textContent = `File Selected: ${file.name}`;
+                DOM.uploadBtn.disabled = false;
+                updateStatus(`Image evidence loaded.`);
+            } else {
+                DOM.fileLabel.textContent = 'Select Image File';
+                DOM.uploadBtn.disabled = true;
+                updateStatus("No file loaded. Awaiting evidence.", "text-red-400");
+            }
+        });
+
+        // Initialize on load
+        initializeFirebase();
+    </script>
+
+    <!-- Main Card UI -->
+    <div id="checkpoint-card" class="nexus-card w-full max-w-lg p-8 rounded-2xl text-center">
+        <h1 class="text-4xl font-extrabold text-blue-400 neon-glow mb-2">THE SENTINEL NEXUS</h1>
+        <p class="text-gray-400 mb-6">Authorization required to activate the next phase portal.</p>
+        
+        <!-- Tabs for Verification Methods -->
+        <div class="flex border-b border-gray-700 mb-6">
+            <button id="tab-image" class="flex-1 py-3 font-semibold text-gray-400 hover:text-yellow-400 transition duration-150">
+                <i data-lucide="image-up" class="w-5 h-5 inline-block mr-1"></i> UPLOAD EVIDENCE
+            </button>
+            <button id="tab-code" class="flex-1 py-3 font-semibold text-gray-400 hover:text-yellow-400 transition duration-150">
+                <i data-lucide="key" class="w-5 h-5 inline-block mr-1"></i> CRYPTOGRAPHIC KEY
+            </button>
+        </div>
+
+        <!-- Content: Image Upload -->
+        <div id="content-image">
+            <div class="file-input-wrapper h-16 mb-6">
+                <input type="file" id="image-upload" accept="image/*" class="w-full h-full opacity-0 absolute">
+                <label for="image-upload" id="file-label" class="flex items-center justify-center h-full border-2 border-dashed border-blue-500 rounded-lg text-lg text-blue-400 bg-gray-800 hover:bg-gray-700 transition duration-200 cursor-pointer p-4 hover:ring-2 ring-blue-500/50">
+                    <i data-lucide="upload-cloud" class="w-6 h-6 mr-2"></i> Select Image File
+                </label>
+            </div>
+            <button id="upload-btn" disabled class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="upload-btn-text">Upload & Confirm Checkpoint</span>
+                <div id="loading-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+            </button>
+        </div>
+
+        <!-- Content: Code Entry -->
+        <div id="content-code" class="hidden">
+            <input type="text" id="secret-code-input" placeholder="Enter Cryptographic Key" class="w-full bg-gray-800 text-green-400 font-mono border border-blue-500 rounded-lg p-3 text-center text-xl mb-6 focus:ring-green-500 focus:border-green-500" autocomplete="off">
+            <button id="code-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-gray-900 font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2">
+                <span id="code-btn-text">Verify Code & Unlock Portal</span>
+            </button>
+        </div>
+
+        <p id="status-message" class="mt-4 text-center text-lg font-semibold text-yellow-400 neon-glow">Initializing...</p>
+        
+        <p class="text-xs text-gray-500 mt-6 pt-4 border-t border-gray-700">Auth Token ID: <span id="auth-user-id">Loading...</span></p>
+
+    </div>
+
+    <script>
+        // Ensure Lucide icons are correctly rendered after dynamic content changes
+        lucide.createIcons();
+    </script>
+</body>
+</html>
