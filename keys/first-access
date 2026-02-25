@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasure Hunt Gate: Key Verification</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark GitHub-like background */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #161b22;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            padding: 32px;
+            border: 1px solid #30363d;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: opacity 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="container">
+    <!-- Content rendered by JavaScript -->
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    // The exact filename that must be uploaded to unlock the gate.
+    const REQUIRED_FILENAME_CODE = "LuckyPikas_Treasure_Hunt_112425-741_Screensaver_Digital_Art.webp";
+    
+    // The visual criteria is kept for user guidance, but the code no longer calls the AI to check it.
+    const REQUIRED_IMAGE_CRITERIA = "A vibrant, digital art image centered on a large, ornate golden emblem featuring a bright yellow star. The scene includes a golden treasure chest overflowing with coins, floating keys, glowing crystals, and is set against a background of purple and green cosmic lights. The words 'LUCKY PIKAS' are prominently displayed below the star.";
+    
+    const PROGRESSION_LINK = "https://example.com/treasure-hunt/stage2"; 
+
+    // --- STATE ---
+    let isUnlocked = false;
+
+    // --- UTILITIES ---
+
+    function displayMessage(message, type) {
+        // Clear any existing loading messages
+        const existingLoading = document.querySelector('.message-box.bg-yellow-600');
+        if (existingLoading) existingLoading.remove();
+
+        const colors = {
+            success: 'bg-green-600',
+            error: 'bg-red-600',
+            info: 'bg-blue-600',
+            loading: 'bg-yellow-600'
+        };
+
+        const messageBox = document.createElement('div');
+        messageBox.className = `message-box ${colors[type]}`;
+        messageBox.textContent = message;
+        document.body.appendChild(messageBox);
+
+        if (type !== 'loading') {
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                setTimeout(() => messageBox.remove(), 300);
+            }, 3000);
+        }
+        return messageBox;
+    }
+
+    // --- CORE LOGIC (Now Offline-Only) ---
+
+    function verifyToken() {
+        const fileInput = document.getElementById('key-file-input');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            displayMessage('Please select the Visual Key image file.', 'error');
+            return;
+        }
+
+        const verifyBtn = document.getElementById('verify-btn');
+        verifyBtn.disabled = true;
+        displayMessage('Performing offline verification...', 'info');
+
+        try {
+            // Check 1: Filename Code Verification
+            if (file.name.trim() === REQUIRED_FILENAME_CODE) {
+                isUnlocked = true;
+                displayMessage('Verification Success: Key Accepted (Filename Match).', 'success');
+                renderApp();
+            } else {
+                displayMessage('Verification Failed. Filename does not match the required code.', 'error');
+            }
+
+        } catch (error) {
+            console.error('Verification Error:', error);
+            displayMessage('An unexpected local error occurred during verification.', 'error');
+        } finally {
+            verifyBtn.disabled = false;
+        }
+    }
+
+    // --- RENDER VIEWS ---
+
+    function renderGateView() {
+        const appDiv = document.getElementById('app');
+        // NOTE: The UI is updated to reflect that the filename is the required code.
+        appDiv.innerHTML = `
+            <div class="flex flex-col items-center space-y-6">
+                <h1 class="text-4xl font-extrabold text-[#58a6ff] text-center">
+                    Treasure Hunt Access Gate
+                </h1>
+                <p class="text-gray-400 text-center text-lg max-w-md">
+                    Upload the exact **Visual Key** file to proceed to the next stage.
+                </p>
+
+                <div class="w-full space-y-6 p-5 bg-[#21262d] rounded-lg border border-[#30363d]">
+                    <div class="space-y-2">
+                        <label for="key-file-input" class="block text-sm font-medium text-gray-300">
+                            1. Upload the Visual Key Image
+                        </label>
+                        <input
+                            type="file"
+                            id="key-file-input"
+                            accept="image/png, image/jpeg, image/webp"
+                            class="block w-full text-sm text-gray-400
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#58a6ff] file:text-white
+                                hover:file:bg-[#4396e9] transition duration-150 cursor-pointer"
+                        />
+                    </div>
+
+                    <p class="text-xs text-yellow-500 italic p-3 border border-yellow-800/50 rounded-lg bg-yellow-900/10">
+                        <span class="font-bold">Required Key:</span> The file name must exactly match this code: 
+                        <code class="font-mono text-xs text-yellow-300 select-all">${REQUIRED_FILENAME_CODE}</code>
+                    </p>
+
+                    <button
+                        onclick="verifyToken()"
+                        id="verify-btn"
+                        class="w-full py-3 px-6 rounded-lg font-semibold transition duration-150
+                            bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                    >
+                        Unlock Progression Portal
+                    </button>
+                </div>
+
+                <div class="mt-4 p-4 text-sm text-gray-500 border-t border-[#30363d]">
+                    <p class="text-gray-400 font-semibold mb-1">Visual Hint (The file content):</p>
+                    <p class="text-sm text-gray-500 italic">${REQUIRED_IMAGE_CRITERIA}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderPortalView() {
+        const appDiv = document.getElementById('app');
+        appDiv.innerHTML = `
+            <div class="flex flex-col items-center space-y-8 p-8 bg-green-900/30 rounded-xl border-4 border-green-500 shadow-2xl w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 text-green-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <h1 class="text-4xl font-extrabold text-green-300 text-center">
+                    ACCESS GRANTED!
+                </h1>
+                <p class="text-gray-200 text-center text-xl max-w-md">
+                    Congratulations! The Progression Key has been verified.
+                </p>
+
+                <div class="w-full p-6 bg-green-800 rounded-lg shadow-xl">
+                    <p class="text-xl font-semibold text-green-100 mb-3">Your Next Challenge:</p>
+                    <a 
+                        href="${PROGRESSION_LINK}" 
+                        target="_blank" 
+                        class="block w-full text-center py-4 rounded-lg font-bold text-lg 
+                            bg-yellow-400 text-gray-900 hover:bg-yellow-500 transition duration-150"
+                    >
+                        START STAGE 2: The Next Clue Awaits!
+                    </a>
+                    <p class="mt-4 text-sm text-green-200 text-center">
+                        Progression Link: <span class="font-mono text-xs">${PROGRESSION_LINK}</span>
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderApp() {
+        if (isUnlocked) {
+            renderPortalView();
+        } else {
+            renderGateView();
+        }
+    }
+
+    // --- INITIALIZATION ---
+    window.verifyToken = verifyToken; // Expose to global scope for onclick handler
+    document.addEventListener('DOMContentLoaded', renderApp);
+
+</script>
+</body>
+</html>
