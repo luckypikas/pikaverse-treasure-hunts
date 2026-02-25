@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Six-Panel Dual Door Portal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define the deep, textured background */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Almost black background */
+            /* Subtle, dark wall texture */
+            background-image: radial-gradient(circle at center, #2e2e2e 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #e5e7eb; /* Light gray text */
+            overflow: hidden;
+            padding: 1rem;
+        }
+        
+        /* Container for the side-by-side doors */
+        .choice-container {
+            display: flex;
+            flex-direction: row; 
+            gap: 2.5rem; 
+            width: 100%;
+            max-width: 900px;
+            height: 80vh; 
+            margin: auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styling for the Door Link */
+        .door-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Centering content, though there's only one main div */
+            text-align: center;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+            min-width: 150px;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            
+            /* Visual styling for the door frame */
+            background-color: #292524; /* Darker frame color */
+            border: 6px solid #44403c; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        /* Inner container for the door texture and panels */
+        .door-body {
+            width: 100%;
+            height: 100%;
+            background-color: #57534e; /* Medium dark wood color */
+            border: 1px solid #292524;
+            border-radius: 0.25rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two vertical sections */
+            grid-template-rows: repeat(3, 1fr); /* Three horizontal panels */
+            gap: 0.65rem;
+            padding: 0.75rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Inner shadow for depth */
+        }
+
+        /* Individual 6-Panel element */
+        .panel {
+            background-color: #645f5b; /* Slightly lighter inner panel face */
+            border: 1px solid #333333;
+            border-radius: 0.15rem;
+            /* Inset box-shadow to simulate panel recess */
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Hover Effect */
+        .door-panel:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.2); /* Subtle white glow on hover */
+        }
+        
+        /* Message Box for interaction feedback */
+        .feedback-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.75rem 1.5rem;
+            background-color: #f97316;
+            color: #1f2937;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .feedback-message.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="feedback-message" class="feedback-message"></div>
+
+    <h1 class="text-3xl font-extrabold mb-10 text-gray-300 text-center uppercase tracking-wider">
+        The Dual Gates of Progression
+    </h1>
+
+    <div class="choice-container">
+
+        <!-- LEFT DOOR: OPTION A (NO LABEL) -->
+        <a id="left-door" href="#left-path" onclick="handleDoorClick('Left Door', 'Path_Left.html')" 
+           class="door-panel">
+            
+            <div class="door-body">
+                <!-- 6 Panels (2 columns x 3 rows) -->
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+            </div>
+            
+            <!-- REMOVED: door-label-plate -->
+        </a>
+
+        <!-- RIGHT DOOR: OPTION B (NO LABEL) -->
+        <a id="right-door" href="#right-path" onclick="handleDoorClick('Right Door', 'Path_Right.html')" 
+           class="door-panel">
+
+            <div class="door-body">
+                <!-- 6 Panels (2 columns x 3 rows) -->
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+                <div class="panel"></div>
+            </div>
+            
+            <!-- REMOVED: door-label-plate -->
+        </a>
+
+    </div>
+
+    <script>
+        /**
+         * Handles the click event for the dual portals.
+         */
+        const handleDoorClick = (pathName, destination) => {
+            // Prevent default hash navigation for cleaner effect
+            event.preventDefault(); 
+            
+            const messageBox = document.getElementById('feedback-message');
+            
+            // 1. Show message
+            messageBox.textContent = `You opened the ${pathName}. Initiating progression...`;
+            messageBox.classList.add('visible');
+            
+            const targetPanel = event.currentTarget;
+            targetPanel.style.transform = 'translateY(-12px) scale(1.04)';
+            targetPanel.style.boxShadow = '0 25px 50px rgba(249, 115, 22, 0.5)';
+            
+            // 3. Remove feedback and reset door after a delay
+            setTimeout(() => {
+                messageBox.classList.remove('visible');
+                targetPanel.style.transform = 'translateY(0) scale(1)';
+                targetPanel.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.7)';
+                
+                console.log(`Simulated navigation to: ${destination}`);
+            }, 2500); 
+        };
+    </script>
+</body>
+</html>
