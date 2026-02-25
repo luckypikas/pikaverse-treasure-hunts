@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cipher Breaker Console</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Use a modern, thematic font */
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+    :root {
+        --color-bg: #0d1117;
+        --color-surface: #161b22;
+        --color-accent: #38bdf8;
+        --color-text-dim: #94a3b8;
+        --color-text-main: #e2e8f0;
+        --color-success: #9ef08f;
+        --color-button: #38bdf8;
+        --color-button-local: #60a5fa;
+        --color-download: #ffb347;
+    }
+    body {
+        font-family: 'Space Mono', monospace;
+        background: var(--color-bg);
+        color: var(--color-text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .console-container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--color-surface);
+        border: 2px solid var(--color-accent);
+        box-shadow: 0 0 40px rgba(56,189,248,0.18);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .header {
+        background: var(--color-bg);
+        padding: 18px;
+        border-bottom: 1px solid var(--color-accent);
+    }
+    .title {
+        color: var(--color-accent);
+        font-size: 24px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    main {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    textarea {
+        width: 100%;
+        min-height: 180px;
+        resize: vertical;
+        background: var(--color-bg);
+        border: 1px solid var(--color-text-dim);
+        color: var(--color-text-main);
+        padding: 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    textarea:focus {
+        border-color: var(--color-accent);
+        outline: none;
+    }
+    .output-box {
+        min-height: 200px;
+        background: #02050a; /* Even darker for output */
+        border: 1px solid #0b1220;
+        padding: 16px;
+        border-radius: 8px;
+        color: var(--color-success); /* Hacker green/blue */
+        white-space: pre-wrap;
+        line-height: 1.5;
+        font-size: 14px;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+    .btn {
+        background: var(--color-button);
+        color: var(--color-bg);
+        font-weight: 800;
+        padding: 12px 20px;
+        border-radius: 8px;
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        cursor: pointer;
+        transition: background 0.2s, opacity 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn:hover:not(:disabled) {
+        background: #0ea5e9; /* Lighten on hover */
+    }
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-local {
+        background: var(--color-button-local);
+        color: white;
+    }
+    .download-btn {
+        background: linear-gradient(90deg, #ffd36e, #ffb347);
+        color: #1b1200;
+        font-weight: 900;
+        padding: 12px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        display: none; /* Controlled by JS */
+        transition: opacity 0.2s;
+        text-align: center;
+    }
+    .download-btn:hover {
+        opacity: 0.9;
+    }
+    .loader {
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top: 3px solid var(--color-button);
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    @keyframes spin { 0% { transform:rotate(0deg);} 100% { transform:rotate(360deg);} }
+    .status-text {
+        color: var(--color-text-dim);
+        font-size: 14px;
+        margin-top: 10px;
+        min-height: 1.5em; /* Prevent layout shift */
+        padding: 0 5px;
+    }
+    .sources-list {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        color: var(--color-text-dim);
+        font-size: 12px;
+        line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .sources-list a {
+        color: var(--color-accent);
+        text-decoration: none;
+    }
+    .sources-list a:hover {
+        text-decoration: underline;
+    }
+    .footer {
+        font-size: 12px;
+        color: var(--color-text-dim);
+        padding: 10px 18px;
+        border-top: 1px solid rgba(255,255,255,0.02);
+        background: #0b1220;
+        text-align: center;
+    }
+    /* Responsive adjustments */
+    @media(max-width: 600px){
+        .title { font-size: 20px; }
+        .btn-group { flex-direction: column; gap: 10px; }
+        .btn, .download-btn { width: 100%; justify-content: center; }
+    }
+</style>
+</head>
+<body>
+
+<div class="console-container">
+    <header class="header">
+        <div class="title">_// Cipher Breaker Console</div>
+    </header>
+
+    <main>
+        <!-- Input Section -->
+        <div>
+            <label class="block text-sm mb-2 text-gray-400">Cipher Input:</label>
+            <textarea id="cipherInput" placeholder="Paste the secret message or cipher text here..."></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-4 flex-wrap btn-group">
+            <button id="decodeButton" class="btn" disabled>DECODE</button>
+            <button id="localButton" class="btn btn-local" style="opacity:0.85">LOCAL ONLY</button>
+            <a id="downloadBtn" class="download-btn ml-auto" download="decoded_message.txt">DOWNLOAD DECODED TEXT</a>
+        </div>
+
+        <!-- Output Section -->
+        <div>
+            <label class="block text-sm mb-2 text-gray-400">Decoded Output:</label>
+            <div id="outputResult" class="output-box">// Awaiting cipher text...</div>
+        </div>
+        
+        <!-- Minimal Status/Source area, hidden until activity -->
+        <div id="statusArea" class="hidden">
+             <div id="statusText" class="status-text"></div>
+             <div id="sources" class="sources-list"></div>
+        </div>
+    </main>
+
+    <div class="footer">Hybrid Engine: Tries AI first, instantly falls back to local decoders if needed.</div>
+</div>
+
+<script>
+/* =========================
+    Cipher Decoder Implementation
+    - Minimalist UI (per user request)
+    - Hybrid decode logic retained (AI + Local fallback)
+    - All technical diagnostics/messages removed from main UI
+    ========================= */
+
+/* --------- Configuration --------- */
+const API_KEY = "";
+const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+const API_TIMEOUT_MS = 3500;
+const TRY_AI_FIRST = true;
+
+/* --------- DOM Elements --------- */
+const cipherInput = document.getElementById('cipherInput');
+const decodeButton = document.getElementById('decodeButton');
+const localButton = document.getElementById('localButton');
+const outputResult = document.getElementById('outputResult');
+const downloadBtn = document.getElementById('downloadBtn');
+const statusTextDiv = document.getElementById('statusText');
+const statusArea = document.getElementById('statusArea');
+const sourcesDiv = document.getElementById('sources');
+
+let localOnlyMode = false;
+
+/* --------- UI Utilities --------- */
+
+/** Updates the status area with activity or final status */
+function updateStatus(message, busy = false) {
+    statusTextDiv.innerHTML = busy ? `<span class="loader"></span> ${message}` : message;
+    statusArea.classList.remove('hidden');
+    // Disable/Enable main button
+    decodeButton.innerHTML = busy ? 'DECODING...' : 'DECODE';
+    decodeButton.disabled = busy || cipherInput.value.trim() === '';
+}
+
+/** Hides the status area and sources */
+function resetStatusUI() {
+    statusArea.classList.add('hidden');
+    statusTextDiv.innerHTML = '';
+    sourcesDiv.innerHTML = '';
+}
+
+/** Displays citation sources or local suggestions */
+function displaySources(list) {
+    if (!list || list.length === 0) {
+        sourcesDiv.innerHTML = 'No external sources cited.';
+        return;
+    }
+
+    sourcesDiv.innerHTML = '<h6>Decoded Candidates / Sources:</h6>';
+    list.forEach(s => {
+        const item = document.createElement('div');
+        const text = s.title.startsWith('Caesar') ? `Local Suggestion: ${s.title}` : `Source: <a href="${s.uri}" target="_blank">${s.title || s.uri}</a>`;
+        item.innerHTML = text;
+        sourcesDiv.appendChild(item);
+    });
+}
+
+/** Enables the download link for the decoded text */
+function enableDownload(text) {
+    const blob = new Blob([text], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    downloadBtn.href = url;
+    downloadBtn.style.display = 'inline-block';
+}
+
+function disableDownload() {
+    downloadBtn.style.display = 'none';
+}
+
+
+/* --------- Local Decoders (Copied from original, simplified) --------- */
+
+function rot13(s) {
+    return s.replace(/[a-zA-Z]/g, function(c) {
+        const a = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode((c.charCodeAt(0) - a + 13) % 26 + a);
+    });
+}
+function reverseText(s){ return s.split('').reverse().join(''); }
+function atbash(s){
+    return s.replace(/[a-zA-Z]/g, function(c){
+        const isUpper = c === c.toUpperCase();
+        const base = isUpper ? 65 : 97;
+        const idx = c.charCodeAt(0) - base;
+        return String.fromCharCode(base + (25 - idx));
+    });
+}
+function caesarShift(s, shift){
+    return s.replace(/[a-zA-Z]/g, function(c){
+        const base = (c === c.toUpperCase()) ? 65 : 97;
+        return String.fromCharCode((c.charCodeAt(0) - base + shift + 26) % 26 + base);
+    });
+}
+function tryAllCaesar(s){
+    const results = [];
+    for (let i=1;i<26;i++){
+        results.push({name:`Caesar(${i})`, text: caesarShift(s, i)});
+    }
+    return results;
+}
+function tryBase64(s){
+    try{
+        const cleaned = s.replace(/[^A-Za-z0-9+/=]/g,'');
+        const decoded = atob(cleaned);
+        return decoded;
+    }catch(e){ return null; }
+}
+function tryHex(s){
+    const cleaned = s.replace(/[^0-9a-fA-F]/g,'');
+    if (cleaned.length % 2 !== 0) return null;
+    try{
+        let out = '';
+        for (let i=0;i<cleaned.length;i+=2){
+            out += String.fromCharCode(parseInt(cleaned.substr(i,2),16));
+        }
+        return out;
+    }catch(e){ return null; }
+}
+function tryBinary(s){
+    const cleaned = s.replace(/[^01\s]/g,'').trim();
+    const parts = cleaned.split(/\s+/);
+    if (parts.length === 0) return null;
+    try{
+        let out = '';
+        for (const p of parts){
+            const n = parseInt(p,2);
+            if (isNaN(n)) return null;
+            out += String.fromCharCode(n);
+        }
+        return out;
+    }catch(e){ return null; }
+}
+function stripZeroWidth(s){
+    return s.replace(/[\u200B-\u200F\uFEFF]/g,'');
+}
+function normalizeWhitespace(s){
+    return s.replace(/\s+/g,' ').trim();
+}
+
+/* --------- Heuristic Scoring (English-likeness) --------- */
+const COMMON_WORDS = [' the ',' and ',' to ',' of ',' that ',' is ',' in ',' you ',' for ',' with ',' not ',' as ',' it ',' on ',' be '];
+function scoreEnglishLikelihood(text){
+    const t = ' ' + text.toLowerCase() + ' ';
+    let score = 0;
+    for (const w of COMMON_WORDS){
+        if (t.indexOf(w) >= 0) score += 1;
+    }
+    const nonPrintableRatio = (text.match(/[^\x09\x0A\x0D\x20-\x7E]/g)||[]).length / Math.max(1, text.length);
+    score -= nonPrintableRatio * 3;
+    if (text.length > 3 && text.length < 2000) score += Math.min(2, Math.log(text.length)/2);
+    return score;
+}
+
+/* --------- Local decode orchestrator --------- */
+function localDecodeAll(cipher){
+    const candidates = [];
+    const cleaned = stripZeroWidth(cipher);
+
+    candidates.push({name:'RAW', text: cleaned, score: scoreEnglishLikelihood(cleaned)});
+    const r13 = rot13(cleaned);
+    candidates.push({name:'ROT13', text:r13, score: scoreEnglishLikelihood(r13)});
+    const atb = atbash(cleaned);
+    candidates.push({name:'ATBASH', text:atb, score: scoreEnglishLikelihood(atb)});
+    const rev = reverseText(cleaned);
+    candidates.push({name:'REVERSE', text:rev, score: scoreEnglishLikelihood(rev)});
+    const b64 = tryBase64(cleaned);
+    if (b64) candidates.push({name:'BASE64', text:b64, score: scoreEnglishLikelihood(b64)});
+    const hx = tryHex(cleaned);
+    if (hx) candidates.push({name:'HEX', text:hx, score: scoreEnglishLikelihood(hx)});
+    const bin = tryBinary(cleaned);
+    if (bin) candidates.push({name:'BINARY', text:bin, score: scoreEnglishLikelihood(bin)});
+    const caesars = tryAllCaesar(cleaned);
+    for (const c of caesars){
+        c.score = scoreEnglishLikelihood(c.text);
+        candidates.push(c);
+    }
+
+    for (const c of candidates){ c.text = normalizeWhitespace(c.text); c.score = c.score || scoreEnglishLikelihood(c.text); }
+    candidates.sort((a,b)=> b.score - a.score);
+
+    // Return the top 8 candidates for scoring/display
+    return candidates.slice(0,8);
+}
+
+
+/* --------- AI call with short timeout --------- */
+async function callAIForDecode(cipher) {
+    const payload = {
+        contents: [{
+            role: "user",
+            parts: [{ text: cipher }]
+        }],
+        tools: [{ "google_search": {} }],
+        systemInstruction: {
+            parts: [{ text: `You are a concise cipher decoder. Always start with "DECODED MESSAGE: " then the answer. If you cannot decode, respond: "DECODING FAILED."` }]
+        }
+    };
+
+    return Promise.race([
+        (async () => {
+            const resp = await fetch(API_URL, {
+                method:'POST',
+                headers: { 'Content-Type':'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!resp.ok) {
+                const body = await resp.text().catch(()=>resp.statusText);
+                throw new Error(`AI_API_ERROR: ${resp.status}`);
+            }
+            const json = await resp.json();
+            const candidate = json?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            return { text: candidate, sources: (json?.candidates?.[0]?.groundingMetadata?.groundingAttributions || []) };
+        })(),
+        new Promise((_, rej) => setTimeout(()=> rej(new Error('AI_TIMEOUT')), API_TIMEOUT_MS))
+    ]);
+}
+
+/* --------- Main hybrid decode function --------- */
+async function hybridDecode(cipher) {
+    resetStatusUI();
+    updateStatus('Working...', true);
+    disableDownload();
+
+    // 1) Try AI first
+    if (!localOnlyMode && TRY_AI_FIRST) {
+        try {
+            updateStatus('Attempting AI decode (Hybrid mode)...', true);
+            const aiResult = await callAIForDecode(cipher);
+
+            if (aiResult && aiResult.text) {
+                let text = (aiResult.text || '').trim();
+                let resultType = 'AI (Grounded)';
+                
+                // Remove the mandatory prefix for cleaner display
+                const prefix = "DECODED MESSAGE: ";
+                if (text.toUpperCase().startsWith(prefix.toUpperCase())) {
+                    text = text.substring(prefix.length).trim();
+                }
+
+                if (text.toUpperCase() === "DECODING FAILED."){
+                    throw new Error('AI FAILED TO DECODE.'); // Force fallback
+                }
+
+                outputResult.textContent = text;
+                updateStatus(`${resultType} decode successful.`, false);
+                
+                // Display grounding sources
+                const sources = aiResult.sources?.map(s => ({uri:s.web?.uri || s.uri, title: s.web?.title || s.title || s.uri})).filter(s => s.uri && s.title) || [];
+                displaySources(sources);
+                
+                enableDownload(text);
+                return;
+            }
+        } catch (err) {
+            // AI failed or timed out; fall through to local decode
+            console.warn('AI decode failed/fallback:', err && err.message ? err.message : err);
+            updateStatus('AI unavailable or timed out — Running local decoder...', true);
+        }
+    }
+
+    // 2) Local decode (fast, deterministic)
+    const candidates = localDecodeAll(cipher);
+    const top = candidates[0];
+
+    if (top && top.score > 1.0) { // Only consider candidates with a minimal English likelihood score
+        outputResult.textContent = top.text;
+        updateStatus(`Local decode successful (${top.name}).`, false);
+        enableDownload(top.text);
+        
+        // Show top few local candidates in the sources area as suggestions
+        const suggestions = candidates.map(c => ({
+            uri:'#', 
+            title: `${c.name} (Score: ${c.score.toFixed(1)}) — Preview: ${c.text.slice(0,50).replace(/\n/g,' ')}...`
+        })).slice(0,5);
+        displaySources(suggestions);
+
+    } else {
+        outputResult.textContent = '// DECODING FAILED: No likely interpretation found.';
+        updateStatus('Decoding failed.', false);
+        // Optionally, show the best attempt, even if bad
+        if (top) {
+            displaySources([{uri:'#', title: `Best Local Attempt (${top.name}, Score: ${top.score.toFixed(1)})`}]);
+        } else {
+            resetStatusUI();
+        }
+    }
+}
+
+/* --------- Event wiring --------- */
+decodeButton.addEventListener('click', async () => {
+    const cipher = cipherInput.value || '';
+    if (!cipher.trim()) return;
+    try {
+        await hybridDecode(cipher);
+    } catch (e) {
+        console.error("Critical Decode Error:", e);
+        outputResult.textContent = '// CRITICAL DECODE ERROR. See console for details.';
+        updateStatus('Critical failure.', false);
+    } finally {
+        // Final re-check to ensure button state matches input
+        decodeButton.disabled = cipherInput.value.trim() === '';
+    }
+});
+
+localButton.addEventListener('click', async () => {
+    localOnlyMode = !localOnlyMode;
+    localButton.style.opacity = localOnlyMode ? '1' : '0.85';
+    localButton.textContent = localOnlyMode ? 'LOCAL MODE ✔' : 'LOCAL ONLY';
+    const statusMsg = localOnlyMode ? 'Local-only mode active. AI skipped.' : 'Hybrid mode active (AI first, fast fallback).';
+    updateStatus(statusMsg, false);
+});
+
+cipherInput.addEventListener('input', () => {
+    decodeButton.disabled = cipherInput.value.trim() === '';
+    // Clear the output/status when user starts typing a new cipher
+    outputResult.textContent = '// Awaiting cipher text...';
+    resetStatusUI();
+    disableDownload();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    outputResult.textContent = '// Awaiting cipher text...';
+    decodeButton.disabled = true;
+    disableDownload();
+    // Hide the status area on load for a truly minimalist look
+    statusArea.classList.add('hidden');
+});
+</script>
+</body>
+</html>
