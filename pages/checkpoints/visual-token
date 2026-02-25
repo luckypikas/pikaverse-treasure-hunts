@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Token Gated Jeopardy Challenge</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937; /* Dark background */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #374151;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 24px;
+        }
+        .jeopardy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .clue-button {
+            transition: all 0.15s ease-in-out;
+            aspect-ratio: 4/3; /* Make buttons rectangular */
+        }
+        .clue-button:not([disabled]):hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="container">
+        <!-- Content will be rendered here by JavaScript -->
+    </div>
+
+    <!-- Modal for Clue Pop-up -->
+    <div id="clue-modal" class="modal fixed inset-0 hidden items-center justify-center p-4">
+        <div class="bg-gray-700 p-8 rounded-xl shadow-2xl max-w-lg w-full space-y-6 border-4 border-yellow-400">
+            <h3 id="modal-title" class="text-2xl font-bold text-yellow-300 text-center"></h3>
+            <div class="p-4 bg-gray-800 rounded-lg border-l-4 border-indigo-500">
+                <p id="modal-question" class="text-xl italic text-gray-200"></p>
+            </div>
+            <input
+                type="text"
+                id="user-answer"
+                placeholder="What/Who is..."
+                class="w-full p-3 rounded-lg bg-gray-900 text-white border border-gray-600 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50"
+            />
+            <div class="flex justify-between space-x-4">
+                <button
+                    onclick="closeModal()"
+                    class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition text-white"
+                >
+                    Close
+                </button>
+                <button
+                    onclick="checkAnswer()"
+                    id="submit-answer-btn"
+                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition text-white"
+                >
+                    Final Answer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const TOKEN_CRITERIA = "A stylized, golden crest featuring a mythical bird (like a phoenix or griffin) and a book, set against a deep crimson background. The crest must be clearly visible.";
+        const MIME_TYPE = 'image/png'; // Assuming user uploads PNG or JPG, treat as PNG for data transmission
+        const JEOPARDY_CATEGORIES = [
+            { id: 0, title: "World Capitals", clues: [
+                { value: 100, question: "This capital city is situated on the Potomac River.", answer: "Washington D.C.", isAnswered: false },
+                { value: 200, question: "It is the most populous city in Japan.", answer: "Tokyo", isAnswered: false },
+                { value: 300, question: "The official home of the Pope, located within Rome.", answer: "Vatican City", isAnswered: false },
+            ]},
+            { id: 1, title: "Famous Rivers", clues: [
+                { value: 100, question: "The longest river in South America.", answer: "Amazon", isAnswered: false },
+                { value: 200, question: "This river flows through London.", answer: "Thames", isAnswered: false },
+                { value: 300, question: "Known as the 'Yellow River' in China.", answer: "Huang He", isAnswered: false },
+            ]},
+            { id: 2, title: "Mythology", clues: [
+                { value: 100, question: "The Greek goddess of wisdom and warfare.", answer: "Athena", isAnswered: false },
+                { value: 200, question: "Norse god of thunder, wields Mjolnir.", answer: "Thor", isAnswered: false },
+                { value: 300, question: "The three-headed dog guarding the entrance to the Underworld.", answer: "Cerberus", isAnswered: false },
+            ]},
+        ];
+
+        // --- STATE VARIABLES ---
+        let gameState = 'GATED'; // GATED, UNLOCKED
+        let score = 0;
+        let jeopardyBoard = JSON.parse(JSON.stringify(JEOPARDY_CATEGORIES)); // Deep copy for mutable state
+        let activeClue = null; // Stores { catId, clueId, value, question, answer }
+
+        // --- DOM ELEMENTS ---
+        const appDiv = document.getElementById('app');
+        const modal = document.getElementById('clue-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalQuestion = document.getElementById('modal-question');
+        const userAnswerInput = document.getElementById('user-answer');
+        const submitBtn = document.getElementById('submit-answer-btn');
+
+        // --- API UTILITY (with Exponential Backoff) ---
+
+        /**
+         * Converts a File object to a base64 string.
+         * @param {File} file - The uploaded image file.
+         * @returns {Promise<string>} Base64 encoded image data.
+         */
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Displays a temporary, self-removing message box.
+         * @param {string} message - The text to display.
+         * @param {string} type - 'success', 'error', 'info', or 'loading'.
+         */
+        function displayMessage(message, type) {
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600',
+                loading: 'bg-yellow-600'
+            };
+            const messageBox = document.createElement('div');
+            messageBox.className = `message-box ${colors[type]}`;
+            messageBox.textContent = message;
+            document.body.appendChild(messageBox);
+
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    messageBox.style.opacity = '0';
+                    setTimeout(() => messageBox.remove(), 300);
+                }, 3000);
+            }
+            return messageBox; // Return for manual removal if needed (like 'loading')
+        }
+
+        /**
+         * Calls the Gemini API for image verification with exponential backoff.
+         */
+        async function verifyToken() {
+            const fileInput = document.getElementById('token-file-input');
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if (!file) {
+                displayMessage('Please select an image file first.', 'error');
+                return;
+            }
+
+            const loadingMessage = displayMessage('Verifying image token with the AI...', 'loading');
+            const verifyBtn = document.getElementById('verify-btn');
+            verifyBtn.disabled = true;
+
+            try {
+                const base64Image = await fileToBase64(file);
+                const prompt = `Does the following image meet this criteria: ${TOKEN_CRITERIA}`;
+
+                const apiKey = ""; // Canvas environment provides API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: prompt },
+                            {
+                                inlineData: {
+                                    mimeType: MIME_TYPE,
+                                    data: base64Image
+                                }
+                            }
+                        ]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: "You are a visual asset verification system. Based on the user's image and prompt, respond ONLY with 'YES' if the criteria is met, or 'NO' if it is not. Do not add any explanation or other text." }]
+                    }
+                };
+
+                const maxRetries = 5;
+                let delay = 1000;
+                let verificationResult = null;
+
+                for (let i = 0; i < maxRetries; i++) {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    verificationResult = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
+                    break;
+                }
+
+
+                if (verificationResult && verificationResult.includes('YES')) {
+                    displayMessage('Verification Successful! Token Accepted. Welcome to the Challenge.', 'success');
+                    gameState = 'UNLOCKED';
+                    renderApp();
+                } else {
+                    displayMessage('Token Failed. The image does not match the required asset. Please find the correct token.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Verification Error:', error);
+                displayMessage('A technical error occurred during verification. Please try again.', 'error');
+            } finally {
+                loadingMessage.remove();
+                verifyBtn.disabled = false;
+            }
+        }
+
+
+        // --- GAME LOGIC ---
+
+        function handleClueClick(catId, clueId) {
+            const category = jeopardyBoard.find(cat => cat.id === catId);
+            const clue = category.clues[clueId];
+
+            if (clue.isAnswered) return;
+
+            activeClue = {
+                catId,
+                clueId,
+                ...clue
+            };
+
+            openModal();
+        }
+
+        function openModal() {
+            modalTitle.textContent = `${jeopardyBoard.find(c => c.id === activeClue.catId).title} - $${activeClue.value}`;
+            modalQuestion.textContent = activeClue.question;
+            userAnswerInput.value = '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            userAnswerInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            activeClue = null;
+        }
+
+        function checkAnswer() {
+            if (!activeClue) return;
+
+            const userAnswer = userAnswerInput.value.trim();
+            if (!userAnswer) {
+                displayMessage("Please enter an answer.", 'info');
+                return;
+            }
+
+            // Simple fuzzy match check (case and whitespace insensitive)
+            const normalizedUserAnswer = userAnswer.toLowerCase().replace(/\s/g, '');
+            const normalizedCorrectAnswer = activeClue.answer.toLowerCase().replace(/\s/g, '');
+            const clueValue = activeClue.value;
+
+            if (normalizedUserAnswer === normalizedCorrectAnswer) {
+                score += clueValue;
+                displayMessage(`Correct! You earned $${clueValue}.`, 'success');
+            } else {
+                score -= clueValue;
+                displayMessage(`Incorrect. The correct answer was: ${activeClue.answer}. You lost $${clueValue}.`, 'error');
+            }
+
+            // Mark clue as answered
+            const category = jeopardyBoard.find(cat => cat.id === activeClue.catId);
+            category.clues[activeClue.clueId].isAnswered = true;
+
+            closeModal();
+            renderApp(); // Re-render the board with updated score and answered clue
+        }
+
+        // Event listener for "Enter" key submission in the modal
+        userAnswerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // --- RENDER VIEWS ---
+
+        function renderGateView() {
+            appDiv.innerHTML = `
+                <div class="flex flex-col items-center p-8 space-y-6 bg-gray-700 rounded-xl shadow-2xl w-full">
+                    <h1 class="text-3xl font-bold text-indigo-400">Visual Token Challenge</h1>
+                    <p class="text-gray-300 text-center text-lg">
+                        You must present the correct **Visual Token** to unlock the game board.
+                    </p>
+                    <div class="p-4 border-2 border-yellow-500 rounded-lg bg-gray-800 w-full">
+                        <p class="text-sm italic text-yellow-300 font-semibold">
+                            Required Token Criteria:
+                        </p>
+                        <p class="text-base text-gray-200 mt-2">${TOKEN_CRITERIA}</p>
+                    </div>
+
+                    <input
+                        type="file"
+                        id="token-file-input"
+                        accept="image/png, image/jpeg"
+                        class="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100 cursor-pointer"
+                    />
+                    <button
+                        onclick="verifyToken()"
+                        id="verify-btn"
+                        class="w-full py-3 px-6 rounded-lg font-semibold transition duration-150 bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    >
+                        Submit Token for AI Verification
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderBoardView() {
+            const isGameOver = jeopardyBoard.every(cat => cat.clues.every(clue => clue.isAnswered));
+
+            let html = `
+                <div class="space-y-6 text-white">
+                    <div class="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-xl border-b-4 border-indigo-500">
+                        <h2 class="text-2xl font-extrabold text-indigo-300">Treasure Hunt: Jeopardy Challenge</h2>
+                        <div class="text-3xl font-mono text-yellow-400">Score: $${score}</div>
+                    </div>
+
+                    <div class="jeopardy-grid">
+            `;
+            // Category Titles
+            jeopardyBoard.forEach(category => {
+                html += `<div class="p-3 bg-indigo-700 rounded-t-lg text-center font-bold text-lg uppercase shadow-md">${category.title}</div>`;
+            });
+            
+            // Clue Buttons
+            for (let i = 0; i < 3; i++) { // Iterate through rows (clue values)
+                jeopardyBoard.forEach(category => {
+                    const clue = category.clues[i];
+                    html += `
+                        <button
+                            onclick="handleClueClick(${category.id}, ${i})"
+                            ${clue.isAnswered ? 'disabled' : ''}
+                            class="clue-button w-full p-4 text-2xl font-extrabold rounded-lg shadow-lg border-2
+                                ${clue.isAnswered
+                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600'
+                                    : 'bg-green-600 text-white border-green-700'
+                                }"
+                        >
+                            ${clue.isAnswered ? 'X' : `$${clue.value}`}
+                        </button>
+                    `;
+                });
+            }
+
+            html += `</div>`; // Close jeopardy-grid
+
+            if (isGameOver) {
+                html += `
+                    <div class="text-center p-6 bg-yellow-900 border-4 border-yellow-500 rounded-xl mt-8">
+                        <p class="text-2xl font-extrabold text-yellow-300">CHALLENGE COMPLETE!</p>
+                        <p class="text-lg text-gray-200 mt-2">Your final score is $${score}. Use this score as a sequence number for your next clue, or present it to the next gatekeeper!</p>
+                    </div>
+                `;
+            }
+
+            html += `</div>`; // Close space-y-6
+
+            appDiv.innerHTML = html;
+        }
+
+        function renderApp() {
+            if (gameState === 'GATED') {
+                renderGateView();
+            } else if (gameState === 'UNLOCKED') {
+                renderBoardView();
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', renderApp);
+    </script>
+</body>
+</html>
