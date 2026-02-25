@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Find the Color — Faux Upload Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060617;
+    --card:#0f1724;
+    --accent:#6ee7b7;
+    --muted:#94a3b8;
+    --glass: rgba(255,255,255,0.04);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(600px 400px at 10% 10%, rgba(99,102,241,0.07), transparent 8%),
+      radial-gradient(600px 400px at 90% 90%, rgba(14,165,233,0.06), transparent 8%),
+      var(--bg);
+    color:#e6eef6;
+    padding:24px;
+  }
+
+  .stage {
+    width:100%;
+    max-width:920px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.03);
+    padding:26px;
+    box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+    position:relative;
+    overflow:hidden;
+  }
+
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+  .title { font-weight:700; font-size:20px; color:var(--accent); letter-spacing:0.6px; }
+  .subtitle { color:var(--muted); font-size:13px; }
+
+  .grid { display:grid; grid-template-columns: 1fr 360px; gap:18px; align-items:start; }
+  @media(max-width:820px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+    border-radius:10px;
+    padding:18px;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .challenge-title { font-size:18px; font-weight:700; color:#fff; margin-bottom:8px;}
+  .challenge-desc { color:var(--muted); margin-bottom:12px; font-size:14px; }
+
+  .fake-upload {
+    display:flex; gap:12px; align-items:center;
+  }
+  .fake-file {
+    flex:1;
+    background:var(--glass);
+    border:1px dashed rgba(255,255,255,0.04);
+    padding:12px;
+    border-radius:8px;
+    color:var(--muted);
+  }
+  .button {
+    background:linear-gradient(180deg,#38bdf8,#06b6d4);
+    color:#002029;
+    font-weight:700;
+    padding:10px 14px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(6,182,212,0.12);
+  }
+  .fake-button {
+    background:linear-gradient(180deg,#f97316,#fb923c);
+    color:#1b0a00;
+  }
+
+  .counter {
+    font-weight:800;
+    font-size:28px;
+    color:#fff;
+    text-align:center;
+    margin:8px 0 12px;
+  }
+
+  .log {
+    min-height:110px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(255,255,255,0.01));
+    border-radius:8px;
+    padding:12px;
+    font-size:13px;
+    color:var(--muted);
+    overflow:auto;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  .jester-popup {
+    display:none;
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:2000;
+    background:linear-gradient(180deg,#fff,#f3f6ff);
+    color:#0b1220;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 30px 80px rgba(2,6,23,0.6);
+    text-align:center;
+    width: min(420px, 94%);
+  }
+  .jester-emoji { font-size:64px; margin-bottom:10px; display:block; }
+
+  .hidden-link {
+    position:absolute;
+    right:12px;
+    bottom:12px;
+    opacity:0.12;
+    color:#fff;
+    font-size:13px;
+    text-decoration:none;
+    transition:opacity .18s ease, transform .18s ease;
+    padding:6px 8px;
+    border-radius:6px;
+  }
+  .hidden-link:hover { opacity:0.9; transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.6); }
+
+  .info-small { font-size:12px; color:var(--muted); margin-top:8px; }
+
+  /* small toast */
+  .toast {
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:28px;
+    z-index:1500;
+    padding:12px 18px;
+    background:#0b1220;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+    color:#e6eef6;
+    box-shadow:0 6px 26px rgba(2,6,23,0.6);
+  }
+
+  /* subtle pulse for final link */
+  .portal-reveal {
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:999px;
+    background:linear-gradient(90deg,#ffd36e,#ff9f1c);
+    color:#2b1600;
+    font-weight:800;
+    text-decoration:none;
+    box-shadow:0 12px 40px rgba(255,160,60,0.12);
+    animation:pop 900ms ease both;
+  }
+  @keyframes pop {
+    0% { transform:scale(0.95); opacity:0; }
+    60% { transform:scale(1.03); opacity:1; }
+    100% { transform:scale(1); opacity:1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" role="application" aria-labelledby="challengeTitle">
+  <header>
+    <div>
+      <div class="title">Find the Color — Mini Challenge</div>
+      <div class="subtitle">Locate an object matching the clue and try to upload it. (Or... don't.)</div>
+    </div>
+    <div id="statusMeter" style="text-align:right;">
+      <div style="font-size:12px;color:var(--muted)">Curiosity Score: <strong id="curiosity">0</strong></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: Challenge / Fake Upload -->
+    <section class="panel" aria-labelledby="challengeTitle">
+      <h2 id="challengeTitle" class="challenge-title">Quick Hunt — Find a <span id="targetLabel" style="color:var(--accent);">LAVENDER BOOK</span></h2>
+      <div class="challenge-desc">You have a ticking window to upload the matching object. Try the upload — the system will respond. Or take a moment to explore the UI — curious things are hidden in plain sight.</div>
+
+      <div class="counter" aria-live="polite" id="timer">00:30</div>
+
+      <div class="fake-upload" aria-hidden="false">
+        <div class="fake-file" id="fakeFileLabel">No file selected — click "UPLOAD" to try.</div>
+        <button class="button fake-button" id="fakeUploadBtn" aria-pressed="false">UPLOAD</button>
+      </div>
+
+      <div class="info-small">Note: If you are bold enough, hover the corners — sometimes the Codex likes to be teased.</div>
+
+      <div style="margin-top:14px;">
+        <div class="log" id="uiLog" aria-live="polite">SYSTEM: Timer active — begin the hunt.</div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Hints / Fake Controls -->
+    <aside class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Clue</div>
+          <div style="font-weight:700;margin-top:6px">Rarity: Vintage • Color hint: <span style="color:#c084fc">Lavender / Lilac</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">Attempts</div>
+          <div id="attempts" style="font-weight:800;font-size:18px">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <button class="button" id="fakeBrowse" style="background:linear-gradient(180deg,#60a5fa,#3b82f6)">BROWSE</button>
+      </div>
+
+      <div style="margin-top:14px" class="info-small">Try clicking the <em>unsuspecting</em> label in the lower right corner of the stage... or don't. Your choice.</div>
+    </aside>
+  </div>
+</div>
+
+<!-- Hidden-in-plain-sight progression link -->
+<!-- This points to your uploaded vault file path so you can transform it into a public URL later -->
+<a id="curiousLink" class="hidden-link" href="/mnt/data/matchpairgame.pdf" title="A curious scroll...">matchpairgame.pdf</a>
+
+<!-- Jester popup (revealed when timer completes) -->
+<div id="jesterPopup" class="jester-popup" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="jester-emoji">🤡</div>
+  <div style="font-weight:800; font-size:18px; margin-bottom:8px">Nevermind. You don't need it.</div>
+  <div style="color:#334155; margin-bottom:14px">The Codex has spoken. Sometimes the treasure was the curiosity itself.</div>
+  <a id="finalPortal" class="portal-reveal" href="/mnt/data/matchpairgame.pdf">Claim the Curious Link →</a>
+  <div style="margin-top:12px;font-size:13px;color:#64748b">You found the jester. Good on you.</div>
+</div>
+
+<!-- small toast container -->
+<div id="toast" class="toast" style="display:none" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const DURATION = 30; // seconds for the faux countdown
+  let remaining = DURATION;
+  let timerId = null;
+  let attempts = 0;
+  const timerEl = document.getElementById('timer');
+  const log = document.getElementById('uiLog');
+  const fakeUploadBtn = document.getElementById('fakeUploadBtn');
+  const fakeBrowse = document.getElementById('fakeBrowse');
+  const fakeFileLabel = document.getElementById('fakeFileLabel');
+  const attemptsEl = document.getElementById('attempts');
+  const toastEl = document.getElementById('toast');
+  const curiousLink = document.getElementById('curiousLink');
+  const jesterPopup = document.getElementById('jesterPopup');
+  const finalPortal = document.getElementById('finalPortal');
+  const targetLabel = document.getElementById('targetLabel');
+  const curiosityEl = document.getElementById('curiosity');
+
+  // choose a random target variation (color/object/book)
+  const targets = [
+    "LAVENDER BOOK",
+    "VIOLET MUG",
+    "PASTEL SCARF",
+    "LILAC POSTER",
+    "RARE LAVENDER COVERED BOOK"
+  ];
+  targetLabel.textContent = targets[Math.floor(Math.random()*targets.length)];
+
+  // show toast
+  function showToast(msg, ms=2000){
+    toastEl.textContent = msg;
+    toastEl.style.display = 'block';
+    setTimeout(()=> { toastEl.style.opacity = '1'; }, 10);
+    setTimeout(()=> { toastEl.style.opacity = '0'; setTimeout(()=> toastEl.style.display='none',250); }, ms);
+  }
+
+  function logLine(line){
+    const time = new Date().toLocaleTimeString();
+    log.textContent = `${time} — ${line}\n` + log.textContent;
+  }
+
+  function startTimer(){
+    updateTimerDisplay();
+    timerId = setInterval(()=> {
+      remaining--;
+      updateTimerDisplay();
+      if (remaining <= 0){
+        clearInterval(timerId);
+        timerEnd();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay(){
+    const mm = String(Math.floor(remaining/60)).padStart(2,'0');
+    const ss = String(remaining%60).padStart(2,'0');
+    timerEl.textContent = `${mm}:${ss}`;
+  }
+
+  function timerEnd(){
+    // final message + jester reveal
+    logLine("Timer ended. The Codex chuckles.");
+    setTimeout(()=> {
+      // show jester popup
+      jesterPopup.style.display = 'block';
+      jesterPopup.setAttribute('aria-hidden','false');
+      showToast("The jester appears... 🤡", 2600);
+      // reveal final portal link (already inside popup)
+    }, 350);
+  }
+
+  // fake upload handler
+  fakeUploadBtn.addEventListener('click', (e) => {
+    attempts++;
+    attemptsEl.textContent = attempts;
+    curiosityEl.textContent = Math.min(100, attempts * 7);
+    // playful rotating responses
+    const responses = [
+      "SYSTEM: Upload intercepted. The Codex giggles.",
+      "SYSTEM: Nice try. The object resists digital capture.",
+      "SYSTEM: The file seems enchanted. Try again.",
+      "SYSTEM: Gate mockery detected. Retry if you dare.",
+      "SYSTEM: The Codex is amused. Nothing uploaded."
+    ];
+    const resp = responses[Math.min(responses.length-1, attempts-1)];
+    logLine(resp);
+    showToast(resp, 1600);
+    // occasional cheeky hint to explore
+    if (attempts === 3){
+      logLine("HINT: Sometimes the smallest text holds the largest secret.");
+    }
+  });
+
+  // fake browse does nothing but add to log (teasing)
+  fakeBrowse.addEventListener('click', (e) => {
+    logLine("BROWSE: Nothing to browse here... or is there?");
+    showToast("Browsing the void... (no files found)", 1600);
+  });
+
+  // secret/inconspicuous progression link behavior: a curious click reveals itself
+  // The link is low opacity; clicking it reveals the jester popup immediately (same as timer end)
+  curiousLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    logLine("Curiosity: Hidden link activated.");
+    curiosityEl.textContent = Math.min(100, Number(curiosityEl.textContent || 0) + 20);
+    // open final popup with same portal target (the href value)
+    jesterPopup.style.display = 'block';
+    jesterPopup.setAttribute('aria-hidden','false');
+  });
+
+  // final portal click - for now it points to the local file path provided in the chat
+  finalPortal.addEventListener('click', (e) => {
+    // allow default navigation; we also log quietly
+    logLine("Portal claimed by player.");
+  });
+
+  // small UX: clicking outside the popup closes it
+  jesterPopup.addEventListener('click', (e) => {
+    if (e.target === jesterPopup) {
+      jesterPopup.style.display = 'none';
+      jesterPopup.setAttribute('aria-hidden','true');
+    }
+  });
+
+  // start countdown automatically
+  startTimer();
+
+  // ARIA keyboard accessibility: press 'H' to nudge hidden link (curiosity)
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key.toLowerCase() === 'h') {
+      logLine("Keyboard nudge: H pressed. Curiosity +10.");
+      curiosityEl.textContent = Math.min(100, Number(curiosityEl.textContent || 0) + 10);
+      showToast("Curiosity +10", 1000);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
