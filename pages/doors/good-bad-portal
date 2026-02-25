@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Progression Portal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a fun, clean look */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(to top right, #6D28D9, #EC4899); /* Deep purple to pink gradient */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            padding: 1rem;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* Styling for the interactive emoji buttons */
+        .emoji-door {
+            /* Full-width on mobile, constrained on desktop */
+            width: 100%; 
+            max-width: 400px;
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+            border-radius: 9999px; /* Fully rounded/pill shape */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .emoji-door:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border-color: #FBBF24; /* Subtle gold hover border */
+        }
+
+        .emoji-icon {
+            font-size: 3.5rem; /* Large emoji size */
+            margin-right: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .emoji-door:hover .emoji-icon {
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .emoji-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Message Box for interaction feedback */
+        .feedback-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.75rem 1.5rem;
+            background-color: #34D399; /* Green for success/feedback */
+            color: #065F46;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        .feedback-message.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Centering container for vertical layout */
+        .center-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        @media (min-width: 768px) {
+            .emoji-door {
+                margin-bottom: 1.5rem;
+                padding: 1.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="feedback-message" class="feedback-message"></div>
+
+    <div class="center-container">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">
+                CHOOSE YOUR VIBE
+            </h1>
+            <p class="text-lg text-indigo-200">
+                Pick the path that matches your current mood.
+            </p>
+        </header>
+
+        <!-- Door 1: The Devil -->
+        <a href="#devil-path" onclick="handleDoorClick('The Dark Path', 'Destiny_One.html', '😈')" 
+           class="emoji-door text-red-300">
+            <span class="emoji-icon">😈</span>
+            <span class="emoji-text">The Dark Path (Destiny I)</span>
+        </a>
+
+        <!-- Door 2: The Happy Face -->
+        <a href="#happy-path" onclick="handleDoorClick('The Joyful Path', 'Destiny_Two.html', '😊')" 
+           class="emoji-door text-green-300">
+            <span class="emoji-icon">😊</span>
+            <span class="emoji-text">The Joyful Path (Destiny II)</span>
+        </a>
+
+        <!-- Door 3: The Cowboy -->
+        <a href="#cowboy-path" onclick="handleDoorClick('The Wild Path', 'Destiny_Three.html', '🤠')" 
+           class="emoji-door text-yellow-300">
+            <span class="emoji-icon">🤠</span>
+            <span class="emoji-text">The Wild Path (Destiny III)</span>
+        </a>
+    </div>
+
+    <script>
+        /**
+         * Handles the click event for the vertical emoji doors.
+         * Shows a notification and simulates the progression link.
+         * @param {string} doorName - The name of the path.
+         * @param {string} destination - The simulated progression link/file.
+         * @param {string} emoji - The emoji used.
+         */
+        const handleDoorClick = (doorName, destination, emoji) => {
+            const messageBox = document.getElementById('feedback-message');
+            
+            // 1. Show message instead of alert()
+            messageBox.textContent = `${emoji} Chosen: ${doorName}. Redirecting to ${destination}...`;
+            messageBox.classList.add('visible');
+            
+            // 2. Add temporary success glow to the selected door
+            const targetDoor = event.currentTarget; 
+            targetDoor.style.transform = 'scale(1.08)';
+            targetDoor.style.borderColor = '#34D399'; // Green border flash
+
+            // 3. Remove feedback and reset door after a delay
+            setTimeout(() => {
+                messageBox.classList.remove('visible');
+                targetDoor.style.transform = 'scale(1)';
+                targetDoor.style.borderColor = 'transparent'; 
+                
+                // In a real application, this is where window.location.href would change.
+                console.log(`Simulated navigation to: ${destination}`);
+            }, 2000); 
+        };
+    </script>
+</body>
+</html>
