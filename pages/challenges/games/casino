@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>The Architect's Slot Gate</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Firebase Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Setting log level for debugging
+        setLogLevel('debug');
+
+        // --- Firebase Initialization (Mandatory Boilerplate) ---
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let app;
+        let db;
+        let auth;
+        let userId = null; 
+        let spinningLoopId = null; // ID to control the animation frame loop
+
+        try {
+            if (Object.keys(firebaseConfig).length > 0) {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Sign in using the custom token or anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                console.log(`Firebase initialized. User ID: ${userId}`);
+            } else {
+                console.warn("Firebase config is missing. Running in local mode (No persistence).");
+                userId = crypto.randomUUID();
+            }
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            userId = crypto.randomUUID();
+        }
+
+        // We wrap the game script inside this module to ensure access to 'userId'
+        // Global game state variables
+        const MAX_SPINS = 7;
+        let spinsRemaining = MAX_SPINS;
+        let isSpinning = false;
+        let isPortalOpen = false;
+
+        // DOM elements (Accessing them after the script block loads)
+        let reels, spinCounter, spinButton, resultMessage, portalSection, portalLink, userIdDisplay;
+        
+        // Emojis for the reels (lightweight assets)
+        const reelSymbols = ['🍒', '🍋', '🍇', '🔔', '💰', '🌟', '💎'];
+
+        /**
+         * Utility function to show the custom modal (MODAL_OVER_ALERT).
+         * @param {string} title
+         * @param {string} body
+         */
+        function showCustomModal(title, body) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').textContent = body;
+            document.getElementById('custom-modal').style.display = 'grid';
+        }
+
+        /**
+         * Generates a random symbol for a reel.
+         * @returns {string} The emoji symbol.
+         */
+        function getRandomSymbol() {
+            const index = Math.floor(Math.random() * reelSymbols.length);
+            return reelSymbols[index];
+        }
+
+        /**
+         * Creates a temporary confetti particle (Simple CONFETTI_CANNON).
+         * @param {string} color
+         * @param {number} x
+         * @param {number} y
+         */
+        function createConfetti(color, x, y) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.background = color;
+            // Position near the button/center of the screen
+            c.style.left = `${x}px`; 
+            c.style.top = `${y}px`;
+            c.style.animation = `confetti-fall ${Math.random() * 2 + 1}s cubic-bezier(0.1, 0.9, 0.5, 1) forwards`;
+            c.style.transform = `scale(${Math.random() * 0.8 + 0.2})`;
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+
+        /**
+         * Fires a burst of confetti.
+         */
+        function fireConfetti() {
+            const colors = ['#FFD700', '#00FFFF', '#FF69B4', '#FFFFFF'];
+            const screenCenterX = window.innerWidth / 2;
+            const screenCenterY = window.innerHeight / 2;
+
+            for (let i = 0; i < 50; i++) {
+                const xOffset = (Math.random() - 0.5) * window.innerWidth;
+                const yOffset = (Math.random() - 0.5) * window.innerHeight;
+                createConfetti(colors[Math.floor(Math.random() * colors.length)], screenCenterX + xOffset, screenCenterY + yOffset);
+            }
+        }
+
+
+        /**
+         * Handles the progression link click.
+         */
+        window.handlePortalClick = function() {
+            if (isPortalOpen) {
+                showCustomModal(
+                    "PORTAL ACTIVATED",
+                    "Congratulations, player! The progression link has been secured. You are now authorized to continue the Flow."
+                );
+            } else {
+                showCustomModal("GATE LOCKED", "The portal is not yet stable. You must complete the task.");
+            }
+        }
+        
+        /**
+         * Animation loop to rapidly change symbols and simulate spinning velocity.
+         */
+        function animateReels() {
+            if (!isSpinning) return;
+            
+            // Rapidly change symbols while spinning
+            reels.forEach(reel => {
+                reel.textContent = getRandomSymbol();
+                // Add CSS class for visual speed effect (stretch/glow)
+                reel.classList.add('spinning');
+            });
+
+            spinningLoopId = requestAnimationFrame(animateReels);
+        }
+
+        /**
+         * Main game loop and progression logic (ATTEMPT_COUNTER).
+         */
+        window.spin = async function() {
+            if (isSpinning || isPortalOpen) return;
+
+            isSpinning = true;
+            spinButton.disabled = true;
+            spinButton.textContent = "Spinning...";
+            resultMessage.textContent = "Processing fate...";
+
+            // 1. Start the visual animation loop (rapidly changing symbols)
+            animateReels(); 
+
+            // 2. Wait for the spin time (2.5 seconds for visual effect)
+            await new Promise(resolve => setTimeout(resolve, 2500)); 
+
+            // 3. Stop spinning
+            isSpinning = false;
+            if (spinningLoopId) {
+                cancelAnimationFrame(spinningLoopId);
+            }
+            // Remove spinning class after the main delay to allow transition/de-blur
+            reels.forEach(reel => reel.classList.remove('spinning'));
+
+            // 4. Determine results
+            const results = reels.map(reel => {
+                const symbol = getRandomSymbol();
+                reel.textContent = symbol;
+                return symbol;
+            });
+
+            // 5. Check for a win (Triples)
+            const isMatch = results[0] === results[1] && results[1] === results[2];
+
+            if (isMatch) {
+                // Instant Win Scenario
+                resultMessage.textContent = "JACKPOT! TRIPLES HIT! THE VAULT IS OPEN!";
+                spinsRemaining = 0; // Force-open the gate
+            } else {
+                // Standard Loss
+                spinsRemaining--;
+                resultMessage.textContent = "No match. Try again...";
+            }
+            
+            spinCounter.textContent = `SPINS LEFT: ${spinsRemaining > 0 ? spinsRemaining : 0}`;
+
+            // 6. Progression Gate Logic (ATTEMPT_COUNTER)
+            if (spinsRemaining <= 0) {
+                isPortalOpen = true;
+                spinButton.disabled = true;
+                spinButton.textContent = "GATE ACTIVE";
+                openPortal();
+            } else {
+                isSpinning = false;
+                spinButton.disabled = false;
+                spinButton.textContent = "SPIN THE REELS";
+            }
+        }
+        
+        /**
+         * Reveals and activates the progression portal.
+         */
+        function openPortal() {
+            portalSection.classList.remove('opacity-0', 'h-0');
+            portalSection.classList.add('opacity-100', 'h-auto');
+            portalLink.classList.add('active'); // Activates HOVER_STATE glow
+            
+            fireConfetti();
+        }
+
+        // --- Initialization on Load ---
+        function initGame() {
+            // Map DOM elements after the script has loaded the entire page structure
+            reels = [
+                document.getElementById('reel1'),
+                document.getElementById('reel2'),
+                document.getElementById('reel3')
+            ];
+            spinCounter = document.getElementById('spin-counter');
+            spinButton = document.getElementById('spin-button');
+            resultMessage = document.getElementById('result-message');
+            portalSection = document.getElementById('portal-section');
+            portalLink = document.getElementById('portal-link');
+            userIdDisplay = document.getElementById('user-id-display');
+
+            // Display the user ID
+            if (userId && userIdDisplay) { 
+                // Only showing a substring of user ID to keep the UI clean
+                userIdDisplay.textContent = `ID: ${userId.substring(0, 8)}...`; 
+            }
+
+            // Set initial reel values
+            reels.forEach(reel => reel.textContent = '🌟');
+
+            // Attach event listener
+            spinButton.addEventListener('click', window.spin);
+            spinButton.textContent = "SPIN THE REELS";
+            spinButton.disabled = false;
+        }
+
+        // Wait for the window load event to start the game initialization
+        window.addEventListener('load', initGame);
+        
+    </script>
+
+    <style>
+        /* Custom CSS for the Epic Arcade Aesthetic */
+        html, body {
+            margin: 0;
+            padding: 0;
+            /* Make sure the body takes up the full viewport height */
+            min-height: 100vh; 
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d0d1f; /* Deep space blue/black */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; 
+            /* Fix: Allow vertical scrolling */
+            overflow-x: hidden;
+            overflow-y: auto; 
+            padding: 20px; 
+        }
+
+        .machine-frame {
+            background: linear-gradient(145deg, #1a1a40, #0a0a25);
+            border: 6px solid #FFD700; /* Gold trim */
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5), 0 0 15px rgba(0, 0, 0, 0.8) inset;
+            max-width: 480px;
+            width: 90vw;
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            margin: auto; 
+            /* Important: Ensure this element is positioned relative to the viewport/body, not the embedded frame */
+            position: relative; 
+            z-index: 10;
+        }
+
+        /* --- Reel Styling & Animation --- */
+        .reels-container {
+            display: flex;
+            gap: 8px;
+            background: #000000;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .reel {
+            flex: 1;
+            height: 120px;
+            overflow: hidden;
+            border: 4px solid #00FFFF; /* Neon Cyan border */
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 72px;
+            line-height: 1;
+            background: rgba(0, 0, 0, 0.5);
+            /* New: Added transition for transform and text-shadow */
+            transition: transform 0.1s ease-out, text-shadow 0.1s ease-out;
+            text-shadow: none; /* Default state */
+        }
+
+        /* Spinning visual effect: Replaced blur with glow and vertical stretch/squash */
+        .reel.spinning {
+            /* 1. Add a strong neon glow */
+            text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF;
+            
+            /* 2. Slightly squash vertically to simulate high-speed distortion */
+            transform: scale(1.02, 0.95) rotateX(10deg);
+            
+            /* 3. Removed: filter: blur(5px) hue-rotate(90deg); */
+        }
+        
+        /* --- Progression Gate Styling (HOVER_STATE Directive) --- */
+        .portal-button {
+            border: 3px solid #333;
+            background: #2d2d2d;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s ease-in-out;
+            color: #fff;
+        }
+
+        .portal-button.active {
+            border-color: #FFD700;
+            background: #5e4c00;
+            box-shadow: 0 0 15px #FFD700, 0 0 5px #fff;
+            animation: pulse-gold 2s infinite alternate;
+            cursor: pointer;
+        }
+        
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 15px #FFD700, 0 0 5px #fff; transform: scale(1.0); }
+            100% { box-shadow: 0 0 25px #FFD700, 0 0 10px #ffe175; transform: scale(1.02); }
+        }
+
+        /* --- Custom Modal Overlay (MODAL_OVER_ALERT Directive) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px); /* Stronger blur for better focus */
+            display: none; /* Controlled by JS */
+            place-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #1a1a40;
+            border: 4px solid #00FFFF;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 20px #00FFFF, 0 0 10px #fff inset;
+            max-width: 90%;
+        }
+
+        /* --- Simple Confetti Effect (CONFETTI_CANNON) --- */
+        @keyframes confetti-fall {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--end-x), 100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 99;
+            pointer-events: none;
+            /* Added variables for more random trajectory */
+            --end-x: calc((var(--random-x) * 100vw) - 50vw);
+            left: 50%;
+            top: 50%;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- The Slot Machine Application Container -->
+    <div class="machine-frame flex flex-col items-center">
+        <h1 class="text-3xl font-extrabold text-[#FFD700] mb-4 tracking-wider uppercase text-shadow-lg">
+            The Architect's Vault Gate
+        </h1>
+
+        <!-- Spin Count and User ID Display -->
+        <div class="flex justify-between w-full mb-6 text-sm font-mono text-gray-300">
+            <span class="bg-gray-800 p-2 rounded-lg border border-cyan-500/50" id="spin-counter">SPINS LEFT: 7</span>
+            <span class="bg-gray-800 p-2 rounded-lg border border-cyan-500/50 text-xs truncate" id="user-id-display">ID: Loading...</span>
+        </div>
+
+        <!-- The Reels Section -->
+        <div class="reels-container w-full">
+            <div class="reel" id="reel1">🌟</div>
+            <div class="reel" id="reel2">🌟</div>
+            <div class="reel" id="reel3">🌟</div>
+        </div>
+
+        <!-- Result Message Display -->
+        <p class="text-lg text-center h-8 my-4 text-cyan-400 font-bold" id="result-message">Spin to begin!</p>
+        
+        <!-- Spin Button (ensuring MOBILE_TOUCH target size) -->
+        <button class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 px-6 rounded-xl shadow-2xl transition duration-200 uppercase text-2xl" disabled="" id="spin-button">
+            Initializing...
+        </button>
+
+        <!-- Progression Portal Section -->
+        <div class="mt-8 w-full transition-all duration-500 opacity-0 h-0 overflow-hidden" id="portal-section">
+            <p class="text-center text-yellow-300 mb-4 font-semibold text-sm">
+                The Path Acknowledges Your Persistence...
+            </p>
+            <a class="portal-button w-full block text-center py-4 rounded-xl font-bold text-xl no-underline" href="javascript:void(0)" id="portal-link" onclick="handlePortalClick()">
+                <span id="portal-text">ACCESS PROGRESSION LINK</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Custom Modal Overlay (MODAL_OVER_ALERT Directive) -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-extrabold mb-4 text-white" id="modal-title"></h2>
+            <p class="mb-6 text-gray-200" id="modal-body"></p>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" onclick="document.getElementById('custom-modal').style.display = 'none'">
+                Continue
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
