@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mystery Box Portal</title>
+<style>
+body {
+  background: radial-gradient(circle, #4c0070, #240035);
+  color: #fbdfff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding-top: 80px;
+  overflow-x: hidden;
+}
+
+/* Mystery box */
+#box {
+  width: 220px;
+  height: 220px;
+  margin: 40px auto;
+  background: linear-gradient(180deg, #cc99ff, #9933ff);
+  border-radius: 12px;
+  box-shadow: 0 0 30px #bb66ff, 0 0 60px #9933ff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.4s;
+}
+
+#box:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 45px #ffbbff, 0 0 80px #dd66ff;
+}
+
+/* Hidden portal */
+#portalLink {
+  display: none;
+  margin-top: 40px;
+}
+
+button {
+  background: #ffddff;
+  color: #4c0070;
+  padding: 16px 32px;
+  font-size: 22px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+button:hover { transform: scale(1.07); }
+</style>
+
+<script>
+function revealPortal() {
+  document.getElementById("portalLink").style.display = "block";
+  document.getElementById("box").style.display = "none";
+}
+</script>
+
+</head>
+
+<body>
+
+<h1>🎁 THE MYSTERY BOX AWAITS 🎁</h1>
+<p>Click the box… if you dare.</p>
+
+<div id="box" onclick="revealPortal()"></div>
+
+<div id="portalLink">
+  <p>The mystery reveals itself...</p>
+  <a href="secret-reward.html">
+    <button>OPEN PORTAL →</button>
+  </a>
+</div>
+
+</body>
+</html>
