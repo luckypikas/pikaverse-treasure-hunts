@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Floating Portal</title>
+<style>
+body {
+  background: linear-gradient(180deg, #bee2ff, #7bb0ff);
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding-top: 80px;
+  color: #003a7a;
+  overflow-x: hidden;
+}
+
+/* Floating animation */
+@keyframes floatUpDown {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Glow animation */
+@keyframes softGlow {
+  0%   { box-shadow: 0 0 20px rgba(0,140,255,0.5); }
+  50%  { box-shadow: 0 0 40px rgba(0,170,255,1); }
+  100% { box-shadow: 0 0 20px rgba(0,140,255,0.5); }
+}
+
+h1 {
+  font-size: 42px;
+  color: #ffffff;
+  text-shadow: 0 0 12px #004a8f;
+}
+
+.portalOrb {
+  width: 200px;
+  height: 200px;
+  margin: 40px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #aee7ff, #4bb4ff);
+  animation: floatUpDown 3s ease-in-out infinite, softGlow 2s ease-in-out infinite;
+}
+
+/* Enter button */
+button {
+  background: #004d9a;
+  color: white;
+  font-size: 22px;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: transform 0.15s ease-out;
+}
+
+button:hover {
+  transform: scale(1.08);
+}
+</style>
+</head>
+
+<body>
+
+<h1>🟦 A FLOATING PORTAL APPEARS 🟦</h1>
+<p>You sense a gentle pull... as if inviting you forward.</p>
+
+<div class="portalOrb"></div>
+
+<a href="next-floating-zone.html">
+  <button>ENTER PORTAL →</button>
+</a>
+
+</body>
+</html>
