@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead End: Acoustic Overload</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #261a0d; /* Dark reddish-brown */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fca5a5; /* Light red/salmon for text */
+            padding: 20px;
+        }
+
+        .warning-box {
+            background-color: #440c0c; /* Deep red background */
+            border: 4px solid #ef4444; /* Bright red border */
+            box-shadow: 0 0 15px #f87171, inset 0 0 10px #f87171;
+            position: relative;
+            animation: pulse-border 1s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            from { border-color: #ef4444; box-shadow: 0 0 15px #f87171, inset 0 0 10px #f87171; }
+            to { border-color: #f87171; box-shadow: 0 0 25px #fca5a5, inset 0 0 15px #fca5a5; }
+        }
+
+        .alert-text {
+            color: #fee2e2;
+            text-shadow: 0 0 3px #ef4444;
+        }
+        
+        .back-button {
+            background-color: #f87171;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #ef4444;
+        }
+        .back-button:hover {
+            background-color: #ef4444;
+        }
+        .back-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #dc2626;
+        }
+
+        /* Inconspicuous Link Styling */
+        .hidden-link {
+            color: #fca5a5;
+            opacity: 0.15; /* Make it very faint */
+            transition: opacity 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            user-select: none;
+        }
+        .hidden-link:hover {
+            opacity: 0.5; /* Slight reveal on hover */
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="warning-box rounded-xl p-10 max-w-xl w-full text-center space-y-8">
+        
+        <h1 class="text-6xl font-black uppercase tracking-wider alert-text">
+            !! DANGER !!
+        </h1>
+        <p class="text-3xl font-bold border-b-2 border-red-500 pb-4">
+            ACOUSTIC OVERLOAD
+        </p>
+
+        <div class="space-y-4 text-left">
+            <p class="text-xl text-gray-200">
+                The chamber ahead is resonating at a frequency that causes tissue damage. Automated sensors indicate decibel levels are currently **160dB+**.
+            </p>
+            <p class="text-lg text-red-300">
+                PROCEEDING WILL RESULT IN SYSTEMIC FAILURE. (Internal Ear Pressure Critical)
+            </p>
+        </div>
+
+        <div class="text-sm border border-red-800 p-3 rounded mt-4">
+            <p>
+                <span class="text-red-500">[STATUS]</span> Structural Integrity: Stable. Acoustic Dampeners: Disabled. Path: Impassable.
+            </p>
+        </div>
+
+        <button onclick="goBack()" class="back-button mt-6 px-8 py-3 rounded-lg font-bold text-white text-xl">
+            RETREAT TO SAFER ZONE
+        </button>
+        
+        <!-- INCONSPICUOUS LINK -->
+        <div class="pt-6">
+            <a href="secret_acoustic_bypass.html" class="hidden-link text-xs italic">
+                *Emergency bypass protocol 77-B: initiate silence sequence override.
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+        // Note: The hidden link targets 'secret_acoustic_bypass.html'. You'll need to create that file later if you want it to lead somewhere!
+    </script>
+</body>
+</html>
