@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Stone Idol - Static Trap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&display=swap');
+
+        /* Theme: Ancient/Cursed Stone */
+        body {
+            font-family: 'Cinzel', serif;
+            background-color: #2b2b2b; /* Dark Stone Gray */
+            background-image: radial-gradient(#3c3c3c 1px, transparent 0);
+            background-size: 20px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #d4d4d4;
+        }
+
+        .stone-container {
+            border: 4px solid #6b4d3f; /* Earth Brown */
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.8) inset, 0 5px 15px rgba(0, 0, 0, 0.5);
+            background-color: #4b4b4b; /* Rough Stone */
+        }
+
+        .idol-text {
+            font-family: 'IM Fell English SC', serif;
+            color: #e5cc80; /* Old Gold */
+            text-shadow: 0 0 5px #a0522d;
+            letter-spacing: 2px;
+        }
+
+        .idol-btn {
+            background-color: #a0522d; /* Sienna Brown */
+            color: #f7f3e8;
+            box-shadow: 0 5px #6b4d3f;
+            transition: all 0.1s;
+        }
+        .idol-btn:active {
+            box-shadow: 0 2px #6b4d3f;
+            transform: translateY(3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="stone-container p-8 md:p-12 rounded-xl text-center max-w-sm mx-4">
+        
+        <div class="text-7xl mb-6 leading-none" role="img" aria-label="Stone Idol">
+            🗿
+        </div>
+
+        <h1 class="idol-text text-5xl mb-4">
+            STATIC TRAP
+        </h1>
+        <p class="text-xl text-gray-300 mb-2">
+            The passage is sealed by ancient wards.
+        </p>
+        <p class="text-sm text-gray-400 mb-8">
+            The Stone Idol consumes all outward motion, binding this artifact to its current location.
+        </p>
+        
+        <!-- The link points to itself (static trap) or the current challenge start page -->
+        <a href="#" onclick="alert('The ward blocks your escape.'); window.location.reload(); return false;" 
+           class="idol-btn inline-block w-full px-10 py-4 rounded-md text-xl font-bold uppercase tracking-wider">
+            SEEK ANOTHER WAY
+        </a>
+        <p class="mt-6 text-sm text-yellow-500">
+            Current Position: UNMOVED
+        </p>
+    </div>
+</body>
+</html>
