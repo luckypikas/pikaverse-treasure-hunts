@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Obsidian Gate Checkpoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Roboto+Mono:wght@400;700&display=swap');
+        body { font-family: 'Roboto Mono', monospace; background-color: #0a0a0a; }
+
+        /* Background: Deep ominous pattern */
+        .ominous-bg {
+            background-color: #0a0a0a;
+            background-image: radial-gradient(circle at center, rgba(30, 0, 0, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Card: Dark, brooding, with a subtle red glow */
+        .gate-card {
+            background: linear-gradient(145deg, #1a0a0a, #0a0a0a);
+            border: 2px solid #5a0a0a; /* Dark red border */
+            box-shadow: 0 0 20px rgba(90, 10, 10, 0.7), 0 0 40px rgba(30, 0, 0, 0.5); /* Deep red glow */
+        }
+
+        /* Title: Scary font, glowing red */
+        .scary-title {
+            font-family: 'Creepster', cursive;
+            text-shadow: 0 0 8px #ff0000, 0 0 15px #aa0000;
+            color: #ff0000;
+        }
+
+        /* Accents for buttons and status */
+        .accent-red {
+            background-color: #8b0000; /* Darker red */
+            color: #ffcccc; /* Light red text */
+        }
+        .hover-accent-red:hover {
+            background-color: #a00000;
+        }
+        .border-accent-red { border-color: #8b0000; }
+        .text-accent-red { color: #ff0000; }
+        .text-status-red { color: #f87171; } /* Lighter red for status */
+        .bg-status-red { background-color: #450a0a; } /* Dark background for status */
+
+        /* Input fields */
+        input[type="text"], input[type="file"] {
+            background-color: #1a0a0a;
+            border-color: #3b0a0a;
+            color: #f0f0f0;
+        }
+        input[type="text"]::placeholder {
+            color: #5a0a0a;
+        }
+        input[type="text"]:focus {
+            border-color: #8b0000;
+            box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+        }
+
+        /* Tab buttons */
+        .tab-btn {
+            background-color: #2a0a0a;
+            color: #f0f0f0;
+        }
+        .tab-btn.active-tab {
+            background-color: #8b0000;
+            color: #ffe0e0;
+            border-bottom: 2px solid #ff0000;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border-top-color: #ff0000;
+            border-right-color: #ff0000;
+        }
+    </style>
+</head>
+<body class="ominous-bg text-gray-200 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Firebase SDKs --><script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global configuration variables MUST be used
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Checkpoint-specific configuration
+        const CHECKPOINT_ID = "the-obsidian-gate-004"; // Unique ID for this checkpoint
+        const SECRET_CODE = "SHADOWKEY666"; // The secret code to unlock this checkpoint
+        const NEXT_CLUE_URL = "https://example.com/the-crimson-labyrinth-005"; // URL for the next challenge
+
+        let db, auth, storage, userId;
+
+        // Utility to display messages to the user (instead of alert)
+        function showMessage(message, isError = false) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.className = isError
+                ? 'p-3 rounded-lg text-red-400 bg-red-900 border border-red-500 shadow-xl'
+                : 'p-3 rounded-lg text-green-400 bg-green-900 border border-green-500 shadow-xl';
+            setTimeout(() => messageBox.textContent = '', 5000);
+        }
+
+        // Authentication and Initialization
+        async function initializeAppAndAuth() {
+            if (!firebaseConfig) {
+                showMessage("ERROR: Demonic sigil for Firebase connection missing.", true);
+                return;
+            }
+
+            try {
+                // setLogLevel('Debug'); // Uncomment for debugging Firestore
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                storage = getStorage(app);
+
+                // Authenticate the user
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = `Initiate Soul: ${userId}`;
+                        setupRealtimeListener();
+                    } else {
+                        showMessage("WARNING: Soul connection severed. Progress will not be recorded.", true);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication error:", error);
+                showMessage("FAILURE: The rituals to connect to the Nether failed.", true);
+            }
+        }
+
+        // Firestore Listener
+        function setupRealtimeListener() {
+            if (!db || !userId) return;
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            onSnapshot(checkpointRef, (docSnap) => {
+                const statusElement = document.getElementById('checkpoint-status');
+                const portalElement = document.getElementById('portal-link');
+
+                if (docSnap.exists() && docSnap.data().completed) {
+                    statusElement.textContent = "Status: GATE OPENED. Your torment continues.";
+                    statusElement.classList.remove('text-yellow-400');
+                    statusElement.classList.add('text-red-500', 'font-bold', 'scary-title');
+                    
+                    portalElement.classList.remove('hidden');
+                    portalElement.onclick = () => window.location.href = NEXT_CLUE_URL;
+
+                    document.getElementById('challenge-area').classList.add('hidden');
+                    document.getElementById('completion-area').classList.remove('hidden');
+                } else {
+                    statusElement.textContent = "Status: GATE SEALED. Prove your worth.";
+                    statusElement.classList.add('text-yellow-400');
+                    statusElement.classList.remove('text-red-500', 'font-bold', 'scary-title');
+
+                    document.getElementById('challenge-area').classList.remove('hidden');
+                    document.getElementById('completion-area').classList.add('hidden');
+                }
+            });
+        }
+
+        // Core Completion Logic
+        async function completeCheckpoint(method, value) {
+            if (!userId) {
+                showMessage("Authentication not ready. The abyss awaits your proof.", true);
+                return;
+            }
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            try {
+                // Save evidence and mark as complete
+                await setDoc(checkpointRef, {
+                    completed: true,
+                    completionTime: new Date().toISOString(),
+                    verificationMethod: method,
+                    value: value,
+                }, { merge: true });
+
+                showMessage("SUCCESS: The gate trembles, ready to open.");
+            } catch (e) {
+                console.error("Error completing checkpoint:", e);
+                showMessage("DAMNATION: Failed to etch your progress into the tablets of fate.", true);
+            }
+        }
+
+        // Handlers for the UI
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppAndAuth();
+
+            // Code Submission Logic
+            document.getElementById('code-submit-btn').addEventListener('click', async () => {
+                const codeInput = document.getElementById('code-input');
+                const enteredCode = codeInput.value.trim().toUpperCase();
+
+                if (enteredCode === SECRET_CODE) {
+                    await completeCheckpoint('code_entry', enteredCode);
+                } else {
+                    showMessage("WRONG KEY: The gate remains shut, mocking your attempt.", true);
+                }
+            });
+
+            // Image Upload Logic
+            document.getElementById('image-upload-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('image-file');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    showMessage("NO SACRIFICE: Select an image to offer.", true);
+                    return;
+                }
+
+                if (!storage) {
+                    showMessage("STORAGE VOID: The ethereal storage realm is unreachable.", true);
+                    return;
+                }
+
+                const loadingIndicator = document.getElementById('image-loading');
+                loadingIndicator.classList.remove('hidden');
+                document.getElementById('image-upload-btn').disabled = true;
+
+                try {
+                    // Create a unique file path for the image
+                    const filePath = `artifacts/${appId}/evidence/${userId}/${CHECKPOINT_ID}/${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, filePath);
+
+                    // Upload the file
+                    const snapshot = await uploadBytes(storageRef, file);
+                    
+                    // Get the public URL
+                    const imageUrl = await getDownloadURL(snapshot.ref);
+
+                    // Complete the checkpoint with the image URL
+                    await completeCheckpoint('image_upload', imageUrl);
+
+                } catch (error) {
+                    console.error("Image upload failed:", error);
+                    showMessage("BLOOD SACRIFICE FAILED: Image offering was rejected.", true);
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    document.getElementById('image-upload-btn').disabled = false;
+                }
+            });
+
+            // Tab Switching Logic
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Deactivate all tabs and hide all contents
+                    tabs.forEach(t => t.classList.remove('active-tab'));
+                    contents.forEach(c => c.classList.add('hidden'));
+
+                    // Activate selected tab and show content
+                    tab.classList.add('active-tab');
+                    document.getElementById(tab.dataset.tab).classList.remove('hidden');
+                });
+            });
+            // Initialize the first tab (Code Entry) as active
+            document.getElementById('code-tab').click();
+
+        });
+    </script>
+
+    <!-- Main Content Card --><div class="w-full max-w-xl gate-card rounded-2xl p-6 md:p-10">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-extrabold scary-title mb-2">
+                THE OBSIDIAN GATE
+            </h1>
+            <p class="text-xl mt-2 text-gray-400">Checkpoint 004: Threshold of Torment</p>
+            <div id="user-id-display" class="text-xs mt-2 text-gray-500"></div>
+        </header>
+
+        <!-- Status Display --><div class="mb-6 p-4 rounded-xl bg-status-red border border-red-900">
+            <p id="checkpoint-status" class="text-lg text-center font-semibold text-status-red">
+                Status: Awaiting Dark Proclamation...
+            </p>
+        </div>
+
+        <!-- Message Box for Feedback --><div id="message-box" class="h-10 text-center transition-all duration-300 mb-4"></div>
+
+        <!-- CHALLENGE AREA (Hidden when complete) --><div id="challenge-area">
+            
+            <p class="text-center text-gray-300 mb-6">
+                To cross the threshold, you must present the Shadow Key or offer visual evidence of your unspeakable journey.
+            </p>
+
+            <!-- Tabs --><div class="flex space-x-2 p-1 bg-black rounded-lg mb-6 border border-gray-800">
+                <button data-tab="code-entry" id="code-tab" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-gray-900">
+                    Shadow Key
+                </button>
+                <button data-tab="image-upload" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-gray-900">
+                    Grim Evidence
+                </button>
+            </div>
+
+            <!-- Tab Content: Code Entry --><div id="code-entry" class="tab-content">
+                <div class="p-6 bg-gray-900 rounded-xl border border-red-900 shadow-inner">
+                    <label for="code-input" class="block text-sm font-medium text-red-400 mb-2">Enter Shadow Key (Hint: 666)</label>
+                    <input type="text" id="code-input" placeholder="Enter the forbidden incantation" class="w-full p-3 rounded-lg border border-gray-700 focus:ring-red-500 placeholder-gray-600 shadow-md">
+                    <button id="code-submit-btn" class="mt-4 w-full py-3 accent-red hover-accent-red text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Unseal the Gate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content: Image Upload --><div id="image-upload" class="tab-content hidden">
+                <div class="p-6 bg-gray-900 rounded-xl border border-red-900 shadow-inner">
+                    <label for="image-file" class="block text-sm font-medium text-red-400 mb-2">Upload Proof of Torment</label>
+                    <input type="file" id="image-file" accept="image/*" class="block w-full text-sm
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:accent-red file:text-white
+                        hover:file:bg-red-800
+                    ">
+                    <button id="image-upload-btn" class="mt-4 w-full py-3 accent-red hover-accent-red text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Offer Evidence
+                    </button>
+                    <div id="image-loading" class="hidden mt-3 text-center text-red-500">
+                        <svg class="animate-spin h-5 w-5 mr-3 inline text-red-500 spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Sacrificing...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLETION AREA (Shown when complete) --><div id="completion-area" class="hidden text-center p-8 bg-gray-900 rounded-xl border border-red-900 shadow-inner">
+            <svg class="h-16 w-16 mx-auto mb-4 text-red-500 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h2 class="text-3xl font-bold text-red-500 scary-title mb-4">THE GATE CRACKS OPEN!</h2>
+            <p class="text-gray-300 mb-6">
+                The Obsidian Gate yields to your will. Proceed into the labyrinth of eternal shadows.
+            </p>
+            <button id="portal-link" class="w-full py-4 accent-red hover-accent-red text-white font-extrabold rounded-xl text-lg transition-transform transform hover:scale-105 shadow-xl">
+                ENTER THE CRIMSON LABYRINTH (005)
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
