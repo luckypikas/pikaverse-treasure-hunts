@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Try Again</title>
+<style>
+body {
+  background: #111;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+  padding-top: 80px;
+}
+button {
+  background: #444;
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover { transform: scale(1.05); }
+</style>
+</head>
+<body>
+
+<h1>🔁 TRY AGAIN</h1>
+<p>Give it another shot to advance.</p>
+
+<a href="game.html">
+  <button>RETRY</button>
+</a>
+
+</body>
+</html>
