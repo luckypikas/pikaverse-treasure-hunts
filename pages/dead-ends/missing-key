@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Locked Portal</title>
+<style>
+body {
+  background: #0e0e0e;
+  color: #cccccc;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding-top: 70px;
+}
+
+/* Locked door */
+.lockedDoor {
+  width: 320px;
+  height: 420px;
+  margin: 40px auto;
+  background: linear-gradient(180deg, #555, #333);
+  border: 8px solid #222;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(255,0,0,0.2), inset 0 0 50px #000;
+  position: relative;
+}
+
+/* Giant lock icon */
+.lockIcon {
+  font-size: 92px;
+  color: #ff4444;
+  text-shadow: 0 0 12px #ff0000, 0 0 30px #ff4444;
+  animation: lockedPulse 1.5s infinite;
+  position: absolute;
+  top: 160px;
+  left: 0;
+  right: 0;
+}
+
+@keyframes lockedPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* No access button */
+button {
+  margin-top: 30px;
+  background: #555;
+  color: #ddd;
+  padding: 16px 32px;
+  font-size: 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover {
+  background: #666;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔒 ACCESS LOCKED</h1>
+<p>You cannot enter this portal yet. A required item or clue is missing.</p>
+
+<div class="lockedDoor">
+  <div class="lockIcon">🔒</div>
+</div>
+
+<a href="return-to-challenge.html">
+  <button>GO BACK</button>
+</a>
+
+</body>
+</html>
