@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decoder Codex: Cipher Scroll Utility</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto+Slab:wght@400;700&display=swap');
+
+        /* Custom Theme: Ancient, Glowing, and Responsive */
+        body {
+            font-family: 'Roboto Slab', serif;
+            background-color: #0d0a0b; /* Very dark background */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1600 800'%3E%3Cg %3E%3Cpath fill='%23221C1D' d='M486.2 396.6c-21.5 6-42.5 12.3-62.8 19.3 27.2-22.1 57.6-35.7 91.5-35.8 33.7-.1 65.5 13.5 92.5 35.5-20.7-6.9-41.5-13.1-62.7-19.2zm-282.8 152.8c-23.7 3.5-47 7.7-69.8 12.5 28.5-21 59.8-33.7 92.9-33.8 33-.1 64.7 12.4 91.5 32.9-22.9-4.7-45.9-8.9-69.7-12.4zm-283.3 153.2c-23.8 3.5-47.2 7.7-70 12.5 28.5-21 59.9-33.7 93-33.8 33-.1 64.6 12.5 91.4 33-22.9-4.7-46-8.9-69.8-12.5zm424.3 0c-23.8 3.5-47.2 7.7-70 12.5 28.5-21 59.9-33.7 93-33.8 33-.1 64.6 12.5 91.4 33-22.9-4.7-46-8.9-69.8-12.5zm1.1-153.2c-23.7 3.5-47 7.7-69.8 12.5 28.5-21 59.8-33.7 92.9-33.8 33-.1 64.7 12.4 91.5 32.9-22.9-4.7-45.9-8.9-69.7-12.4zm1 153.2c-23.8 3.5-47.2 7.7-70 12.5 28.5-21 59.9-33.7 93-33.8 33-.1 64.6 12.5 91.4 33-22.9-4.7-46-8.9-69.8-12.5zm1-153.2c-23.7 3.5-47 7.7-69.8 12.5 28.5-21 59.8-33.7 92.9-33.8 33-.1 64.7 12.4 91.5 32.9-22.9-4.7-45.9-8.9-69.7-12.4zm1.1 153.2c-23.8 3.5-47.2 7.7-70 12.5 28.5-21 59.9-33.7 93-33.8 33-.1 64.6 12.5 91.4 33-22.9-4.7-46-8.9-69.8-12.5zm1.1-153.2c-23.7 3.5-47 7.7-69.8 12.5 28.5-21 59.8-33.7 92.9-33.8 33-.1 64.7 12.4 91.5 32.9-22.9-4.7-45.9-8.9-69.7-12.4zm1.1 153.2c-23.8 3.5-47.2 7.7-70 12.5 28.5-21 59.9-33.7 93-33.8 33-.1 64.6 12.5 91.4 33-22.9-4.7-46-8.9-69.8-12.5z' fill-opacity='.1'%3E%3C/path%3E%3C/g%3E%3C/svg%3E");
+            color: #d1d5db; /* Light gray text */
+        }
+
+        /* Card / Scroll styling */
+        .codex-scroll {
+            background-color: #241e21; /* Dark gray, parchment-like background */
+            border: 3px solid #6b4d3c; /* Old wood border color */
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); /* Subtle gold glow */
+        }
+
+        /* Title style */
+        .codex-title {
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 10px #fcd34d; /* Bright gold text shadow */
+            color: #fcd34d; /* Amber/Gold color */
+        }
+
+        /* Input/Textarea Fields (Internal to the Scroll) */
+        textarea, input[type="text"] {
+            background-color: #1a1517; /* Darker field background */
+            border: 1px solid #4a403d; /* Subtle dark border */
+            color: #e5e7eb; /* Off-white text */
+            font-family: monospace; /* For clear code reading */
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #fcd34d; /* Gold focus border */
+            box-shadow: 0 0 5px rgba(252, 211, 77, 0.5);
+        }
+
+        /* Primary Action Buttons */
+        .codex-btn {
+            background-color: #92400e; /* Dark burnt orange/sienna */
+            transition: all 0.2s;
+        }
+        .codex-btn:hover {
+            background-color: #c2410c; /* Brighter orange/red on hover */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(146, 64, 14, 0.6);
+        }
+
+        /* Progression Portal Button (Special) */
+        .portal-btn {
+            background: linear-gradient(135deg, #fcd34d 0%, #b8860b 100%); /* Gold gradient */
+            color: #1a1517;
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 5px #fff;
+            box-shadow: 0 0 15px #fcd34d;
+            animation: pulse-gold 1.5s infinite;
+        }
+        .portal-btn:hover {
+            background: linear-gradient(135deg, #ffe082 0%, #d4af37 100%);
+        }
+
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: 0 0 15px #fcd34d; }
+            50% { box-shadow: 0 0 25px #fcd34d, 0 0 5px #fff; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl codex-scroll rounded-2xl p-6 md:p-10 lg:p-12 shadow-2xl">
+
+        <header class="text-center mb-8 border-b pb-4 border-gray-700">
+            <h1 class="text-4xl md:text-5xl font-extrabold codex-title mb-2">
+                THE DECODER CODEX
+            </h1>
+            <p class="text-sm text-gray-400">The Cipher Scroll of the Vault. Shift 3 Cipher Utility.</p>
+        </header>
+
+        <main class="grid lg:grid-cols-2 gap-8">
+            
+            <!-- ENCODING PANEL -->
+            <section class="p-4 rounded-xl bg-black/30 shadow-inner">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-4 border-b border-yellow-800 pb-2">
+                    <svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2v2m-4-4v4m-5 3h4m-4 0h4m-4 0v4m5-4v4m-5 4h4m-4 0h4m-4 0v4m5-4v4m-5-4v4m5 0h4m-4 0h4m-4 0v4m5-4v4"></path></svg>
+                    ENCODING SCROLL
+                </h2>
+                
+                <label for="plaintext-input" class="block text-sm font-medium mb-2 text-gray-300">Plain Text Message (A-Z, 0-9, Spaces)</label>
+                <textarea id="plaintext-input" rows="5" class="w-full p-3 rounded-lg resize-none" placeholder="Enter the secret message you wish to conceal..."></textarea>
+                
+                <button id="encode-btn" class="codex-btn w-full mt-4 py-3 rounded-lg text-white font-bold uppercase tracking-wider">
+                    Forge Cipher Scroll
+                </button>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Encoded Cipher Text (Shift 3)</label>
+                    <textarea id="ciphertext-output" rows="5" class="w-full p-3 rounded-lg resize-none cursor-copy" readonly placeholder="Encoded message will appear here..."></textarea>
+                </div>
+            </section>
+
+            <!-- DECODING PANEL -->
+            <section class="p-4 rounded-xl bg-black/30 shadow-inner">
+                <h2 class="text-2xl font-bold text-green-500 mb-4 border-b border-green-800 pb-2">
+                    <svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012 2h-7a2 2 0 00-2 2v15a2 2 0 002 2zm3-11v2m0 0v2m0 0h2m-2-2h-2m-2 2v2m0 0v2m0 0h2m-2-2h-2m-2 2v2m0 0v2m0 0h2m-2-2h-2"></path></svg>
+                    DECODING KEY
+                </h2>
+                
+                <label for="ciphertext-input" class="block text-sm font-medium mb-2 text-gray-300">Cipher Text Input</label>
+                <textarea id="ciphertext-input" rows="5" class="w-full p-3 rounded-lg resize-none" placeholder="Paste the coded scroll here..."></textarea>
+                
+                <button id="decode-btn" class="codex-btn w-full mt-4 py-3 rounded-lg text-white font-bold uppercase tracking-wider">
+                    Reveal Plain Text
+                </button>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Deciphered Message</label>
+                    <textarea id="plaintext-output" rows="5" class="w-full p-3 rounded-lg resize-none" readonly placeholder="Decoded message will appear here..."></textarea>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- TREASURE HUNT / STATUS AREA -->
+        <footer class="mt-8 p-6 rounded-xl border border-dashed border-gray-600 bg-black/40 text-center">
+            <h3 class="text-xl font-bold mb-3 text-red-400">VAULT PROGRESSION UTILITY</h3>
+            
+            <p id="hunt-status" class="text-md text-gray-400 mb-6">
+                Decoding a hidden key will unlock the gateway.
+            </p>
+
+            <!-- The Progression Portal Link -->
+            <div id="portal-area" class="hidden">
+                <p class="text-lg font-semibold codex-title mb-4">
+                    The Scroll Shimmers... The Path is Open!
+                </p>
+                <a id="progression-portal" href="#" target="_self" class="portal-btn inline-block px-8 py-4 rounded-full text-xl font-extrabold shadow-lg transition duration-300 transform hover:scale-105">
+                    ENTER THE CRYSTAL GATE
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const SHIFT = 3;
+        const SECRET_KEY_PHRASE = "CLICK THE CRYSTAL GATE TO ADVANCE"; // The key phrase that triggers the portal
+        const PROGRESSION_URL = "https://example.com/vault-progression-link"; // Placeholder URL
+
+        // --- Core Cipher Logic (Caesar Shift N) ---
+
+        /**
+         * Applies the Caesar cipher transformation.
+         * @param {string} text - The input text.
+         * @param {number} shift - The shift value.
+         * @param {boolean} isDecoding - True if decoding (negative shift), false if encoding.
+         * @returns {string} The transformed text.
+         */
+        function caesarTransform(text, shift, isDecoding) {
+            let result = '';
+            const finalShift = isDecoding ? -shift : shift;
+
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+
+                if (char >= 'A' && char <= 'Z') {
+                    // Uppercase letters (65-90)
+                    let charCode = char.charCodeAt(0);
+                    let newCode = (charCode - 65 + finalShift + 26) % 26 + 65;
+                    result += String.fromCharCode(newCode);
+
+                } else if (char >= 'a' && char <= 'z') {
+                    // Lowercase letters (97-122)
+                    let charCode = char.charCodeAt(0);
+                    let newCode = (charCode - 97 + finalShift + 26) % 26 + 97;
+                    result += String.fromCharCode(newCode);
+
+                } else if (char >= '0' && char <= '9') {
+                    // Numbers (48-57)
+                    let charCode = char.charCodeAt(0);
+                    let newCode = (charCode - 48 + finalShift + 10) % 10 + 48;
+                    result += String.fromCharCode(newCode);
+
+                } else {
+                    // Keep spaces, punctuation, etc. as is
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        // --- UI Handlers and Integration ---
+
+        function handleEncoding() {
+            const plaintextInput = document.getElementById('plaintext-input').value;
+            const encodedText = caesarTransform(plaintextInput, SHIFT, false);
+            document.getElementById('ciphertext-output').value = encodedText;
+        }
+
+        function handleDecoding() {
+            const ciphertextInput = document.getElementById('ciphertext-input').value;
+            const decodedText = caesarTransform(ciphertextInput, SHIFT, true);
+            document.getElementById('plaintext-output').value = decodedText;
+
+            // Treasure Hunt Logic Check
+            checkProgressionKey(decodedText.toUpperCase().trim());
+        }
+
+        function checkProgressionKey(decodedMessage) {
+            const portalArea = document.getElementById('portal-area');
+            const huntStatus = document.getElementById('hunt-status');
+            const portalLink = document.getElementById('progression-portal');
+
+            if (decodedMessage === SECRET_KEY_PHRASE) {
+                // SUCCESS: Reveal the portal
+                portalLink.href = PROGRESSION_URL;
+                portalArea.classList.remove('hidden');
+                huntStatus.textContent = "SUCCESS: The decoded scroll matches the Ancient Key! Click the glowing portal to advance.";
+                huntStatus.classList.remove('text-gray-400');
+                huntStatus.classList.add('text-green-500', 'font-bold');
+            } else {
+                // FAILURE/Default: Hide portal and show retry message
+                portalArea.classList.add('hidden');
+                huntStatus.textContent = "Decoding a hidden key will unlock the gateway.";
+                huntStatus.classList.remove('text-green-500', 'font-bold');
+                huntStatus.classList.add('text-gray-400');
+            }
+        }
+
+        // --- Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set the progression link placeholder
+            document.getElementById('progression-portal').href = PROGRESSION_URL;
+
+            // Attach event listeners
+            document.getElementById('encode-btn').addEventListener('click', handleEncoding);
+            document.getElementById('decode-btn').addEventListener('click', handleDecoding);
+
+            // Copy to clipboard feature for encoded text
+            document.getElementById('ciphertext-output').addEventListener('click', (e) => {
+                if (e.target.value) {
+                    e.target.select();
+                    document.execCommand('copy');
+                    // Optional visual feedback
+                    e.target.style.transition = 'background-color 0.3s';
+                    e.target.style.backgroundColor = '#4a403d'; // Temporary darker flash
+                    setTimeout(() => {
+                        e.target.style.backgroundColor = '#1a1517';
+                    }, 300);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
