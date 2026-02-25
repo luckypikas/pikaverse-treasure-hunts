@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Treasure Portal</title>
+
+<style>
+/* GLOBAL */
+body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at center, #fff6d9 0%, #f1c761 45%, #b98a19 100%);
+    font-family: "Georgia", serif;
+    text-align: center;
+    color: #443000;
+    overflow: hidden;
+}
+
+/* FLOATING GOLD PARTICLES */
+.particles {
+    position: fixed;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -2;
+}
+.particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: rgba(255, 240, 150, 0.9);
+    box-shadow: 0 0 6px #fffac4;
+    border-radius: 50%;
+    animation: drift 6s infinite ease-in-out;
+}
+@keyframes drift {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-200px) scale(0.5); opacity: 0; }
+}
+
+/* TREASURE CHEST GLOW */
+.chest-glow {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 280px;
+    background: radial-gradient(circle at center, 
+        rgba(255, 255, 255, 0.9),
+        rgba(255, 215, 91, 0.7),
+        rgba(255, 175, 0, 0.35),
+        rgba(0, 0, 0, 0)
+    );
+    filter: blur(35px);
+    animation: glowPulse 3.5s infinite ease-in-out;
+    z-index: -1;
+}
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+/* CHEST IMAGE (stylized pure CSS shape) */
+.treasure-chest {
+    width: 260px;
+    height: 180px;
+    margin: 90px auto 10px;
+    position: relative;
+}
+.chest-lid {
+    width: 100%;
+    height: 60px;
+    background: linear-gradient(to bottom, #e9b63b, #a77a10);
+    border-radius: 10px 10px 0 0;
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.3);
+}
+.chest-body {
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(to bottom, #f3cc47, #d8a41c);
+    border-radius: 0 0 14px 14px;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.35), 0 4px 10px rgba(0,0,0,0.4);
+    border: 4px solid #7a5c0b;
+}
+.lock {
+    position: absolute;
+    left: 50%; top: 40%;
+    transform: translateX(-50%);
+    width: 36px; height: 55px;
+    background: #6e520c;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+.lock:before {
+    content: "";
+    position: absolute;
+    left: 50%; top: -20px;
+    transform: translateX(-50%);
+    width: 28px; height: 20px;
+    border-radius: 50%;
+    border: 5px solid #6e520c;
+}
+
+/* TEXT */
+h1 {
+    font-size: 48px;
+    margin-top: 20px;
+    color: #402a00;
+    text-shadow: 0 0 15px #ffe08a, 0 0 25px #ffcf52;
+    font-weight: bold;
+}
+p {
+    font-size: 20px;
+    color: #5a4300;
+    text-shadow: 0 0 5px #fff5c5;
+    margin-bottom: 25px;
+}
+
+/* PORTAL BUTTON */
+.portal-btn {
+    background: linear-gradient(135deg, #ffe98e 0%, #ffcf54 40%, #f1b225 100%);
+    padding: 18px 52px;
+    font-size: 26px;
+    border: 3px solid #7a5406;
+    border-radius: 50px;
+    color: #4b3200;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow:
+        0 0 18px #fff1b8,
+        0 0 30px #ffdd78,
+        inset 0 0 8px #fff9d2;
+    transition: 0.25s ease;
+}
+.portal-btn:hover {
+    transform: scale(1.08);
+    box-shadow:
+        0 0 25px #fff7c7,
+        0 0 50px #ffe08b,
+        inset 0 0 12px #ffffff;
+}
+
+/* HIDDEN PROGRESSION LINK */
+.secret {
+    position: fixed;
+    bottom: 12px;
+    right: 18px;
+    opacity: 0.12;
+    font-size: 14px;
+    cursor: pointer;
+}
+.secret:hover {
+    opacity: 0.9;
+}
+</style>
+</head>
+
+<body>
+
+<!-- FLOATING PARTICLES -->
+<div class="particles">
+    <script>
+        for (let i = 0; i < 38; i++) {
+            const p = document.createElement("div");
+            p.className = "particle";
+            p.style.left = Math.random() * 100 + "%";
+            p.style.top = (Math.random() * 100 + 20) + "%";
+            p.style.animationDelay = (Math.random() * 6) + "s";
+            p.style.animationDuration = (4 + Math.random() * 6) + "s";
+            document.querySelector(".particles").appendChild(p);
+        }
+    </script>
+</div>
+
+<!-- CHEST GLOW -->
+<div class="chest-glow"></div>
+
+<!-- TREASURE CHEST -->
+<div class="treasure-chest">
+    <div class="chest-lid"></div>
+    <div class="chest-body"></div>
+    <div class="lock"></div>
+</div>
+
+<!-- TEXT -->
+<h1>✨ ACCESS GRANTED ✨</h1>
+<p>The treasure vault responds to your presence…</p>
+
+<!-- BUTTON -->
+<a href="next-page.html">
+    <button class="portal-btn">OPEN THE GOLDEN VAULT →</button>
+</a>
+
+<!-- Hidden link -->
+<a href="next-page.html" class="secret">gold-index</a>
+
+</body>
+</html>
