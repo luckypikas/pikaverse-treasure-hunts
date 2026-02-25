@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lucky Pikas — Obstacle Pong</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    margin: 0;
+    background: #0d0f16;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    color: #fff;
+    font-family: Arial, sans-serif;
+  }
+  canvas {
+    background: #111827;
+    border: 3px solid #00eaff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #00eaff99;
+  }
+  h1 { margin-bottom: 10px; color: #00f0ff; }
+</style>
+</head>
+
+<body>
+<h1>Lucky Pikas — Obstacle Pong</h1>
+<canvas id="game" width="700" height="450"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let paddle = {
+  x: canvas.width / 2 - 50,
+  y: canvas.height - 20,
+  width: 100,
+  height: 12
+};
+
+let ball = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  radius: 8,
+  dx: 4 * (Math.random() > 0.5 ? 1 : -1),
+  dy: -4
+};
+
+let obstacles = [];
+function spawnObstacles() {
+  obstacles = [];
+  for (let i = 0; i < 3; i++) {
+    obstacles.push({
+      x: Math.random() * (canvas.width - 60),
+      y: Math.random() * (canvas.height - 200) + 40,
+      w: 60,
+      h: 20
+    });
+  }
+}
+spawnObstacles();
+
+// Paddle Control — mouse + touch
+canvas.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  paddle.x = e.clientX - rect.left - paddle.width / 2;
+});
+canvas.addEventListener("touchmove", e => {
+  const rect = canvas.getBoundingClientRect();
+  paddle.x = e.touches[0].clientX - rect.left - paddle.width / 2;
+});
+
+// Collision helper
+function isColliding(b, o) {
+  return (
+    b.x + b.radius > o.x &&
+    b.x - b.radius < o.x + o.w &&
+    b.y + b.radius > o.y &&
+    b.y - b.radius < o.y + o.h
+  );
+}
+
+// Main game loop
+function update() {
+  // Move ball
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Wall bounce
+  if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+    ball.dx *= -1;
+  }
+  if (ball.y - ball.radius < 0) {
+    ball.dy *= -1;
+  }
+
+  // Paddle bounce
+  if (
+    ball.y + ball.radius >= paddle.y &&
+    ball.x > paddle.x &&
+    ball.x < paddle.x + paddle.width
+  ) {
+    ball.dy *= -1;
+    spawnObstacles(); // NEW round → new obstacles
+  }
+
+  // Obstacle collisions
+  for (let block of obstacles) {
+    if (isColliding(ball, block)) {
+      ball.dy *= -1;
+    }
+  }
+
+  // Lose condition
+  if (ball.y - ball.radius > canvas.height) {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dy = -4;
+    spawnObstacles();
+  }
+}
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Paddle
+  ctx.fillStyle = "#00eaff";
+  ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+  // Ball
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+  ctx.fillStyle = "#ffdf00";
+  ctx.fill();
+
+  // Obstacles
+  ctx.fillStyle = "#ff0077";
+  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
