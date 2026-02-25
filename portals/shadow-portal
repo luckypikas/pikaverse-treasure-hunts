@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Shadow Portal</title>
+<style>
+body {
+  background: radial-gradient(circle at center, #3a0000, #000000 80%);
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding-top: 90px;
+  color: #ffb3b3;
+}
+
+/* Ominous pulse animation */
+@keyframes shadowPulse {
+  0%   { box-shadow: 0 0 25px rgba(255,0,0,0.3); }
+  50%  { box-shadow: 0 0 45px rgba(255,0,0,0.7); }
+  100% { box-shadow: 0 0 25px rgba(255,0,0,0.3); }
+}
+
+h1 {
+  font-size: 44px;
+  color: #ff6a6a;
+  text-shadow: 0 0 12px #ff0000, 0 0 24px #520000;
+}
+
+p {
+  font-size: 20px;
+  color: #ff9898;
+}
+
+/* The shadow portal circle */
+.shadowPortal {
+  width: 240px;
+  height: 240px;
+  margin: 40px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #4b0000, #000000 80%);
+  animation: shadowPulse 2.2s infinite ease-in-out;
+}
+
+/* Exit button */
+button {
+  background: #a30000;
+  color: white;
+  font-size: 22px;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 40px;
+  transition: transform 0.15s ease-out;
+}
+
+button:hover {
+  transform: scale(1.08);
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚫ YOU HAVE ENTERED THE SHADOW PORTAL ⚫</h1>
+<p>A misstep… a wrong answer… a path of consequence.</p>
+
+<div class="shadowPortal"></div>
+
+<a href="setback-or-retry.html">
+  <button>CONTINUE →</button>
+</a>
+
+</body>
+</html>
