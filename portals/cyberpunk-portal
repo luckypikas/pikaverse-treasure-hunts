@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Cyberpunk Portal</title>
+
+<style>
+/* GLOBAL -------------------------------------------------------------- */
+body {
+    margin: 0;
+    padding: 0;
+    background: #030212;
+    font-family: 'Tahoma', sans-serif;
+    color: #c8f3ff;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* MOVING CYBER GRID BACKGROUND --------------------------------------- */
+.cyber-grid {
+    position: fixed;
+    top: 0; left: 0;
+    width: 200%; height: 200%;
+    background-size: 50px 50px;
+    background-image:
+        linear-gradient(90deg, rgba(0,255,255,0.15) 1px, transparent 1px),
+        linear-gradient(rgba(0,255,255,0.15) 1px, transparent 1px);
+    animation: gridMove 14s linear infinite;
+    z-index: -2;
+    opacity: 0.4;
+}
+@keyframes gridMove {
+    from { transform: translate(0,0); }
+    to { transform: translate(-200px, -200px); }
+}
+
+/* GLOWING ENERGY ORBS ------------------------------------------------- */
+.orb {
+    position: fixed;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    z-index: -1;
+    animation: floatOrb 9s ease-in-out infinite alternate;
+}
+@keyframes floatOrb {
+    0% { transform: translateY(0px) translateX(0px); }
+    100% { transform: translateY(-60px) translateX(30px); }
+}
+.orb1 { background: #00eaff; top: 10%; left: 10%; }
+.orb2 { background: #ff00e6; bottom: 12%; right: 15%; }
+
+/* PORTAL RING --------------------------------------------------------- */
+.portal-ring {
+    width: 320px;
+    height: 320px;
+    margin: 80px auto 20px;
+    border-radius: 50%;
+    border: 8px solid transparent;
+    background: conic-gradient(
+        #00ffff,
+        #0ef,
+        #00aaff,
+        #00ffff,
+        #ff00f7,
+        #8a00ff,
+        #00ffff
+    );
+    filter: drop-shadow(0 0 25px #00eaff);
+    animation: spinRing 6s linear infinite;
+}
+@keyframes spinRing {
+    100% { transform: rotate(360deg); }
+}
+
+/* PORTAL INNER CORE --------------------------------------------------- */
+.portal-core {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: -280px auto 0;
+    background: radial-gradient(circle, #031c2c, #000);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 45px #00eaff,
+        0 0 40px #00cfff,
+        0 0 80px #00eaff;
+    animation: corePulse 3s infinite ease-in-out;
+}
+@keyframes corePulse {
+    0%, 100% { box-shadow: inset 0 0 25px #00eaff, 0 0 40px #00cfff; }
+    50% { box-shadow: inset 0 0 50px #00eaff, 0 0 90px #00fff6; }
+}
+
+/* TEXT --------------------------------------------------------------- */
+h1 {
+    font-size: 48px;
+    margin-top: 25px;
+    letter-spacing: 3px;
+    color: #5df8ff;
+    text-shadow: 0 0 12px #00eaff, 0 0 30px #0097ff;
+}
+
+p {
+    font-size: 22px;
+    color: #bbfaff;
+    text-shadow: 0 0 8px #0082a8;
+    margin-top: 10px;
+}
+
+/* PORTAL BUTTON ------------------------------------------------------ */
+.portal-btn {
+    margin-top: 35px;
+    background: linear-gradient(135deg, #00eaff 0%, #8a00ff 100%);
+    padding: 18px 50px;
+    font-size: 26px;
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow:
+        0 0 20px #00eaff,
+        0 0 40px #8a00ff;
+    transition: 0.25s;
+}
+.portal-btn:hover {
+    transform: scale(1.07);
+    box-shadow:
+        0 0 25px #00f2ff,
+        0 0 50px #b300ff;
+}
+
+/* HIDDEN LINK (in plain sight) -------------------------------------- */
+.hidden-node {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 14px;
+    opacity: 0.08;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.hidden-node:hover {
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Cyber Grid -->
+<div class="cyber-grid"></div>
+
+<!-- Energy Orbs -->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- Portal -->
+<div class="portal-ring"></div>
+<div class="portal-core"></div>
+
+<!-- Text -->
+<h1>⚡ ACCESS GRANTED ⚡</h1>
+<p>Neural gate stabilized. Cyber-channel is open.</p>
+
+<!-- Button -->
+<a href="next-page.html">
+    <button class="portal-btn">ENTER NEON GATE →</button>
+</a>
+
+<!-- Hidden progression node -->
+<a href="next-page.html" class="hidden-node">◇</a>
+
+</body>
+</html>
