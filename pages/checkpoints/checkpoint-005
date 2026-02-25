@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Crimson Labyrinth Checkpoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto+Slab:wght@400;700&display=swap');
+        body { font-family: 'Roboto Slab', serif; background-color: #3b0707; }
+
+        /* Background: Rich gradient */
+        .labyrinth-bg {
+            background: linear-gradient(135deg, #3b0707 0%, #4a1c1c 50%, #5c2c2c 100%);
+        }
+
+        /* Card: Elegant, warm, with golden glow */
+        .labyrinth-card {
+            background: rgba(40, 5, 5, 0.95);
+            border: 2px solid #a0522d; /* Sienna brown border */
+            box-shadow: 0 0 25px rgba(160, 82, 45, 0.6), 0 0 50px rgba(70, 20, 20, 0.4); /* Brown-gold glow */
+        }
+
+        /* Title: Elegant font, golden glow */
+        .elegant-title {
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 8px #ffd700, 0 0 15px #daa520; /* Gold glow */
+            color: #ffd700; /* Gold color */
+        }
+
+        /* Accents for buttons and status */
+        .accent-gold {
+            background-color: #b8860b; /* Dark goldenrod */
+            color: #fff;
+        }
+        .hover-accent-gold:hover {
+            background-color: #d4af37; /* Lighter gold */
+        }
+        .border-accent-gold { border-color: #b8860b; }
+        .text-accent-gold { color: #ffd700; }
+        .text-status-gold { color: #ffd700; }
+        .bg-status-gold { background-color: #5c2c2c; } /* Dark burgundy background for status */
+
+        /* Input fields */
+        input[type="text"], input[type="file"] {
+            background-color: #280505;
+            border-color: #6d0a0a;
+            color: #f5deb3; /* Wheat color */
+        }
+        input[type="text"]::placeholder {
+            color: #a0522d; /* Sienna */
+        }
+        input[type="text"]:focus {
+            border-color: #b8860b;
+            box-shadow: 0 0 5px rgba(184, 134, 11, 0.5);
+        }
+
+        /* Tab buttons */
+        .tab-btn {
+            background-color: #3d0a0a;
+            color: #f5deb3;
+        }
+        .tab-btn.active-tab {
+            background-color: #b8860b;
+            color: #fff;
+            border-bottom: 2px solid #ffd700;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border-top-color: #ffd700;
+            border-right-color: #ffd700;
+        }
+    </style>
+</head>
+<body class="labyrinth-bg text-gray-200 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global configuration variables MUST be used
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Checkpoint-specific configuration
+        const CHECKPOINT_ID = "the-crimson-labyrinth-005"; // Unique ID for this checkpoint
+        const SECRET_CODE = "MINOTAURMAZE"; // The secret code to unlock this checkpoint
+        const NEXT_CLUE_URL = "https://example.com/the-lost-crypt-006"; // URL for the next challenge
+
+        let db, auth, storage, userId;
+
+        // Utility to display messages to the user (instead of alert)
+        function showMessage(message, isError = false) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.className = isError
+                ? 'p-3 rounded-lg text-red-400 bg-red-900 border border-red-500 shadow-xl'
+                : 'p-3 rounded-lg text-green-400 bg-green-900 border border-green-500 shadow-xl';
+            setTimeout(() => messageBox.textContent = '', 5000);
+        }
+
+        // Authentication and Initialization
+        async function initializeAppAndAuth() {
+            if (!firebaseConfig) {
+                showMessage("ERROR: Ancient runes for Firebase connection are unreadable.", true);
+                return;
+            }
+
+            try {
+                // setLogLevel('Debug'); // Uncomment for debugging Firestore
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                storage = getStorage(app);
+
+                // Authenticate the user
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = `Seeker ID: ${userId}`;
+                        setupRealtimeListener();
+                    } else {
+                        showMessage("WARNING: Connection to the Labyrinth's echoes lost. Progress may not be saved.", true);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication error:", error);
+                showMessage("FAILURE: The ancient energies preventing connection are too strong.", true);
+            }
+        }
+
+        // Firestore Listener
+        function setupRealtimeListener() {
+            if (!db || !userId) return;
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            onSnapshot(checkpointRef, (docSnap) => {
+                const statusElement = document.getElementById('checkpoint-status');
+                const portalElement = document.getElementById('portal-link');
+
+                if (docSnap.exists() && docSnap.data().completed) {
+                    statusElement.textContent = "Status: LABYRINTH CONQUERED! The path reveals itself.";
+                    statusElement.classList.remove('text-yellow-400');
+                    statusElement.classList.add('text-accent-gold', 'font-bold', 'elegant-title');
+                    
+                    portalElement.classList.remove('hidden');
+                    portalElement.onclick = () => window.location.href = NEXT_CLUE_URL;
+
+                    document.getElementById('challenge-area').classList.add('hidden');
+                    document.getElementById('completion-area').classList.remove('hidden');
+                } else {
+                    statusElement.textContent = "Status: LOST IN THE MAZE. Find your way.";
+                    statusElement.classList.add('text-yellow-400');
+                    statusElement.classList.remove('text-accent-gold', 'font-bold', 'elegant-title');
+
+                    document.getElementById('challenge-area').classList.remove('hidden');
+                    document.getElementById('completion-area').classList.add('hidden');
+                }
+            });
+        }
+
+        // Core Completion Logic
+        async function completeCheckpoint(method, value) {
+            if (!userId) {
+                showMessage("Authentication not ready. The Labyrinth guards its secrets.", true);
+                return;
+            }
+
+            const userDocPath = `artifacts/${appId}/users/${userId}/checkpoints/${CHECKPOINT_ID}`;
+            const checkpointRef = doc(db, userDocPath);
+
+            try {
+                // Save evidence and mark as complete
+                await setDoc(checkpointRef, {
+                    completed: true,
+                    completionTime: new Date().toISOString(),
+                    verificationMethod: method,
+                    value: value,
+                }, { merge: true });
+
+                showMessage("SUCCESS: A new passage echoes open.");
+            } catch (e) {
+                console.error("Error completing checkpoint:", e);
+                showMessage("FAILURE: The Labyrinth shifts, denying your claim.", true);
+            }
+        }
+
+        // Handlers for the UI
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppAndAuth();
+
+            // Code Submission Logic
+            document.getElementById('code-submit-btn').addEventListener('click', async () => {
+                const codeInput = document.getElementById('code-input');
+                const enteredCode = codeInput.value.trim().toUpperCase();
+
+                if (enteredCode === SECRET_CODE) {
+                    await completeCheckpoint('code_entry', enteredCode);
+                } else {
+                    showMessage("INCORRECT MAZE KEY: The walls remain unmoving.", true);
+                }
+            });
+
+            // Image Upload Logic
+            document.getElementById('image-upload-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('image-file');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    showMessage("NO TRIBUTE: Provide a visual offering to the Labyrinth.", true);
+                    return;
+                }
+
+                if (!storage) {
+                    showMessage("ANCIENT VAULT: Storage realm is impenetrable.", true);
+                    return;
+                }
+
+                const loadingIndicator = document.getElementById('image-loading');
+                loadingIndicator.classList.remove('hidden');
+                document.getElementById('image-upload-btn').disabled = true;
+
+                try {
+                    // Create a unique file path for the image
+                    const filePath = `artifacts/${appId}/evidence/${userId}/${CHECKPOINT_ID}/${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, filePath);
+
+                    // Upload the file
+                    const snapshot = await uploadBytes(storageRef, file);
+                    
+                    // Get the public URL
+                    const imageUrl = await getDownloadURL(snapshot.ref);
+
+                    // Complete the checkpoint with the image URL
+                    await completeCheckpoint('image_upload', imageUrl);
+
+                } catch (error) {
+                    console.error("Image upload failed:", error);
+                    showMessage("TRIBUTE REJECTED: Image offering was consumed by the void.", true);
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    document.getElementById('image-upload-btn').disabled = false;
+                }
+            });
+
+            // Tab Switching Logic
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Deactivate all tabs and hide all contents
+                    tabs.forEach(t => t.classList.remove('active-tab'));
+                    contents.forEach(c => c.classList.add('hidden'));
+
+                    // Activate selected tab and show content
+                    tab.classList.add('active-tab');
+                    document.getElementById(tab.dataset.tab).classList.remove('hidden');
+                });
+            });
+            // Initialize the first tab (Code Entry) as active
+            document.getElementById('code-tab').click();
+
+        });
+    </script>
+
+    <!-- Main Content Card -->
+    <div class="w-full max-w-xl labyrinth-card rounded-2xl p-6 md:p-10">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-extrabold elegant-title mb-2">
+                THE CRIMSON LABYRINTH
+            </h1>
+            <p class="text-xl mt-2 text-gray-400">Checkpoint 005</p>
+            <div id="user-id-display" class="text-xs mt-2 text-gray-500"></div>
+        </header>
+
+        <!-- Status Area -->
+        <div class="mb-6 p-4 rounded-xl bg-status-gold border border-amber-900">
+            <p id="checkpoint-status" class="text-lg text-center font-semibold text-status-gold">
+                Status: Lost in the Maze...
+            </p>
+        </div>
+
+        <!-- Message Box -->
+        <div id="message-box" class="h-10 text-center transition-all duration-300 mb-4"></div>
+
+        <!-- Challenge Area (Visible when not completed) -->
+        <div id="challenge-area">
+            
+            <p class="text-center text-gray-300 mb-6">
+                Decipher the ancient glyphs or present a relic found deep within the maze's core.
+            </p>
+
+            <!-- Tab Navigation -->
+            <div class="flex space-x-2 p-1 bg-black/50 rounded-lg mb-6 border border-gray-700">
+                <button data-tab="code-entry" id="code-tab" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-gray-800">
+                    Ancient Glyph Key
+                </button>
+                <button data-tab="image-upload" class="tab-btn flex-1 py-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-gray-800">
+                    Relic Offering
+                </button>
+            </div>
+
+            <!-- Tab Content: Code Entry -->
+            <div id="code-entry" class="tab-content">
+                <div class="p-6 bg-black/30 rounded-xl border border-amber-900 shadow-inner">
+                    <label for="code-input" class="block text-sm font-medium text-accent-gold mb-2">Enter the Glyph Key (Hint: MINOTAUR)</label>
+                    <input type="text" id="code-input" placeholder="Enter the maze's secret word" class="w-full p-3 rounded-lg border focus:ring-amber-500 placeholder-amber-900 shadow-md">
+                    <button id="code-submit-btn" class="mt-4 w-full py-3 accent-gold hover-accent-gold text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Unlock the Passage
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content: Image Upload -->
+            <div id="image-upload" class="tab-content hidden">
+                <div class="p-6 bg-black/30 rounded-xl border border-amber-900 shadow-inner">
+                    <label for="image-file" class="block text-sm font-medium text-accent-gold mb-2">Upload Relic Image</label>
+                    <input type="file" id="image-file" accept="image/*" class="block w-full text-sm
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:accent-gold file:text-white
+                        hover:file:bg-amber-700
+                    ">
+                    <button id="image-upload-btn" class="mt-4 w-full py-3 accent-gold hover-accent-gold text-white font-bold rounded-lg transition-transform transform hover:scale-[1.01] shadow-lg">
+                        Offer Tribute
+                    </button>
+                    <div id="image-loading" class="hidden mt-3 text-center text-accent-gold">
+                        <svg class="animate-spin h-5 w-5 mr-3 inline text-accent-gold spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="4"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Engraving...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion Area (Visible when completed) -->
+        <div id="completion-area" class="hidden text-center p-8 bg-black/30 rounded-xl border border-amber-900 shadow-inner">
+            <svg class="h-16 w-16 mx-auto mb-4 text-accent-gold animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 class="text-3xl font-bold text-accent-gold elegant-title mb-4">PATH REVEALED!</h2>
+            <p class="text-gray-300 mb-6">
+                The Labyrinth yields its final secret. Proceed to the next ancient location.
+            </p>
+            <button id="portal-link" class="w-full py-4 accent-gold hover-accent-gold text-white font-extrabold rounded-xl text-lg transition-transform transform hover:scale-105 shadow-xl">
+                PROCEED TO THE LOST CRYPT (006)
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
