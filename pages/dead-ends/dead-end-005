@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead End: Temporal Anomaly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Almost black */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #d4d4d4; /* Light grey */
+            padding: 20px;
+        }
+
+        .time-loop-box {
+            background-color: #2b2b2b;
+            border: 3px solid #6366f1; /* Indigo border */
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mono-text {
+            font-family: 'Roboto Mono', monospace;
+            color: #a5b4fc; /* Light indigo */
+        }
+
+        /* Repeating Pattern to suggest the loop */
+        .loop-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            font-size: 2rem;
+            line-height: 1.2;
+            word-break: break-all;
+            overflow: hidden;
+            animation: drift 20s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+
+        .back-button {
+            background-color: #6366f1;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #4f46e5;
+        }
+        .back-button:hover {
+            background-color: #4f46e5;
+        }
+        .back-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #4338ca;
+        }
+
+        /* Inconspicuous Link Styling - Blends with the pattern */
+        .hidden-timestamp-link {
+            color: #a5b4fc;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: color 0.2s;
+            border-bottom: 1px solid transparent; /* Invisible border */
+        }
+        .hidden-timestamp-link:hover {
+            color: #e0e7ff; /* Slightly whiter on hover */
+            border-bottom: 1px solid #e0e7ff; /* Appears on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="time-loop-box rounded-xl p-10 max-w-xl w-full text-center space-y-6">
+        
+        <!-- Background Loop Pattern -->
+        <div class="loop-pattern mono-text">
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+            LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END LOOP START 08:14:33:000 LOOP END 
+        </div>
+
+        <div class="relative z-10 space-y-4">
+            <h1 class="text-4xl font-bold uppercase tracking-wider text-indigo-400">
+                Temporal Anomaly Detected
+            </h1>
+            <p class="text-lg mono-text">
+                [SYSTEM LOG] Position marker reset. Time stamp reverts.
+            </p>
+            
+            <p class="text-xl pt-4 text-gray-300">
+                You are trapped in a short-range loop. Every step forward brings you back to this exact point. The path ahead is temporally fractured and impassable.
+            </p>
+            
+            <p class="text-sm pt-4 mono-text">
+                <span class="text-red-400">// RECURSION FAILURE //</span> CURRENT STAMP: 
+                <!-- INCONSPICUOUS LINK EMBEDDED IN THE "TIMESTAMP" -->
+                <a href="secret_time_jump.html" class="hidden-timestamp-link font-bold text-xl">
+                    08:14:33:000
+                </a>
+            </p>
+        </div>
+
+        <button onclick="goBack()" class="back-button mt-6 px-8 py-3 rounded-lg font-bold text-white text-xl">
+            REVERSE ENGAGEMENT
+        </button>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+        // Note: The hidden link targets 'secret_time_jump.html'.
+    </script>
+</body>
+</html>
