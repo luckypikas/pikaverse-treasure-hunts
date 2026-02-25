@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Consensus Codex — Feud Engine v2.0</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+
+    body {
+        background: radial-gradient(circle at top, #1b1134, #0a0715);
+        color: #e5e7eb;
+        font-family: 'Rajdhani', sans-serif;
+    }
+    .codex-card {
+        background: rgba(31, 29, 54, 0.9);
+        border: 2px solid #6d28d9;
+        box-shadow: 0 0 35px rgba(139, 92, 246, 0.4);
+        backdrop-filter: blur(4px);
+    }
+    .title {
+        font-family: 'Orbitron', sans-serif;
+        text-shadow: 0 0 8px #8b5cf6;
+    }
+    .answer-slot {
+        transition: 0.3s ease;
+    }
+    .portal-btn {
+        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        color: white;
+        font-family: 'Orbitron';
+        text-shadow: 0 0 6px #fff;
+        box-shadow: 0 0 20px #3b82f6;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%,100% { transform: scale(1); box-shadow: 0 0 20px #3b82f6; }
+        50% { transform: scale(1.05); box-shadow: 0 0 35px #a78bfa; }
+    }
+</style>
+</head>
+
+<body class="p-6">
+
+<div class="max-w-3xl mx-auto codex-card rounded-3xl p-10">
+
+    <!-- HEADER -->
+    <div class="text-center mb-8 pb-4 border-b border-violet-700">
+        <h1 class="text-4xl font-extrabold title">THE CONSENSUS CODEX</h1>
+        <p class="text-sm text-gray-400">Family Feud-Style Interface · Score Threshold Required</p>
+    </div>
+
+    <!-- SCORE BAR -->
+    <div class="flex justify-between bg-black/30 p-4 rounded-xl border border-gray-700 mb-6">
+        <div class="text-xl font-bold">Score: <span id="score" class="text-green-400">0</span></div>
+        <div class="text-xl font-bold">Round: <span id="round" class="text-blue-400">1</span></div>
+    </div>
+
+    <!-- QUESTION -->
+    <div id="question" class="text-2xl text-center font-bold text-violet-200 mb-6">
+        Press START to enter the Codex.
+    </div>
+
+    <!-- INPUT ROW -->
+    <div class="flex gap-4 mb-6">
+        <input id="answerInput"
+               class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-violet-500 focus:ring-2 focus:ring-violet-400 disabled:opacity-40"
+               placeholder="Type your answer..."
+               disabled />
+        <button id="submitBtn"
+                class="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 font-bold disabled:opacity-40"
+                disabled>
+            SUBMIT
+        </button>
+    </div>
+
+    <!-- ANSWER BOARD -->
+    <div id="board" class="bg-black/30 p-5 rounded-xl border border-violet-900 space-y-3 mb-4"></div>
+
+    <!-- MESSAGE -->
+    <p id="message" class="text-center text-yellow-300 font-semibold h-6 mb-4"></p>
+
+    <!-- START / NEXT BUTTON -->
+    <button id="nextBtn"
+            class="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 font-extrabold text-xl tracking-widest">
+        START
+    </button>
+
+    <!-- PORTAL -->
+    <div id="portal" class="hidden mt-10 p-6 border-4 border-green-500 rounded-xl text-center bg-black/40">
+        <p class="text-green-300 text-xl font-bold mb-4">PORTAL UNLOCKED</p>
+        <a id="portalLink" target="_self"
+           class="portal-btn px-10 py-5 rounded-full text-2xl font-extrabold block">
+           ENTER NEXT REALM
+        </a>
+    </div>
+
+</div>
+
+<script>
+/* ---------------- CONFIG ---------------- */
+const SCORE_THRESHOLD = 500;
+const PROGRESSION_URL = "https://example.com/next-stage";
+
+/* -------------- GAME DATA ----------------
+   - Pulls automatically from your Vault if available.
+-------------------------------------------- */
+
+let VAULT_QUESTIONS = [];  
+
+async function loadVaultQuestions() {
+    try {
+        const resp = await fetch("https://luckypikasgo.blogspot.com/p/game-vault-0001.html");
+        const html = await resp.text();
+        const matches = [...html.matchAll(/<li>(.*?)<\/li>/g)].map(m => m[1]);
+
+        matches.forEach(m => {
+            const split = m.split("|");
+            if (split.length >= 5) {
+                VAULT_QUESTIONS.push({
+                    q: split[0],
+                    answers: [
+                        { text: split[1], points: parseInt(split[2]) },
+                        { text: split[3], points: parseInt(split[4]) },
+                        { text: split[5], points: parseInt(split[6]) },
+                        { text: split[7], points: parseInt(split[8]) },
+                    ].slice(0,4)
+                });
+            }
+        });
+    } catch(e) {
+        console.warn("Vault load failed, using internal sample questions.");
+    }
+}
+
+const FALLBACK_QUESTIONS = [
+    {
+        q: "Name something a wise mentor tells you to release.",
+        answers: [
+            { text:"fear", points:300 },
+            { text:"ego", points:200 },
+            { text:"doubt", points:150 },
+            { text:"anger", points:100 }
+        ]
+    },
+    {
+        q:"Name a fictional artifact that grants immense knowledge.",
+        answers:[
+            { text:"philosopher's stone", points:300 },
+            { text:"tesseract", points:250 },
+            { text:"one ring", points:200 },
+            { text:"infinity gauntlet", points:150 }
+        ]
+    },
+];
+
+/* ---------------- STATE ---------------- */
+let questions = [];
+let round = 0;
+let score = 0;
+let roundActive = false;
+
+/* ---------------- DOM ---------------- */
+const qEl = document.getElementById("question");
+const boardEl = document.getElementById("board");
+const msgEl = document.getElementById("message");
+const ansInput = document.getElementById("answerInput");
+const submitBtn = document.getElementById("submitBtn");
+const nextBtn = document.getElementById("nextBtn");
+const scoreEl = document.getElementById("score");
+const roundEl = document.getElementById("round");
+const portal = document.getElementById("portal");
+const portalLink = document.getElementById("portalLink");
+
+/* ---------------- HELPERS ---------------- */
+function normalize(t) {
+    return t.toLowerCase().replace(/[^a-z0-9]/g,"");
+}
+function shuffle(a) {
+    for (let i=a.length-1;i>0;i--) {
+        let j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+}
+function renderBoard(a) {
+    boardEl.innerHTML = "";
+    a.forEach((ans,idx)=>{
+        const div = document.createElement("div");
+        div.className="answer-slot p-3 bg-gray-800 rounded border border-gray-700 flex justify-between";
+        div.id = "ans-"+idx;
+        div.innerHTML = `
+            <span class="font-bold w-6 text-violet-400">${idx+1}.</span>
+            <span class="font-extrabold text-gray-500 flex-grow text-xl">????????</span>
+            <span class="font-bold text-gray-600 w-20 text-right">---</span>
+        `;
+        boardEl.appendChild(div);
+    });
+}
+
+/* ---------------- GAME FLOW ---------------- */
+
+async function startGame() {
+    score = 0;
+    round = 0;
+    scoreEl.textContent = score;
+
+    questions = VAULT_QUESTIONS.length ? VAULT_QUESTIONS : FALLBACK_QUESTIONS;
+    shuffle(questions);
+
+    nextRound();
+}
+
+function nextRound() {
+    round++;
+    roundEl.textContent = round;
+    msgEl.textContent="";
+
+    const q = questions[round-1];
+    qEl.textContent = q.q;
+    q.answers.forEach(a=>a.revealed=false);
+    renderBoard(q.answers);
+
+    ansInput.disabled=false;
+    submitBtn.disabled=false;
+    ansInput.value="";
+    ansInput.focus();
+
+    nextBtn.classList.add("hidden");
+    roundActive=true;
+}
+
+function submitAnswer() {
+    if (!roundActive) return;
+    const val = normalize(ansInput.value.trim());
+    if (!val) return;
+
+    const q = questions[round-1];
+    let correct = false;
+
+    q.answers.forEach((a,i)=>{
+        if (!a.revealed && normalize(a.text)===val) {
+            a.revealed=true;
+            score+=a.points;
+            scoreEl.textContent=score;
+
+            const slot=document.getElementById("ans-"+i);
+            slot.innerHTML=`
+                <span class="font-bold w-6 text-green-400">${i+1}.</span>
+                <span class="font-extrabold text-green-300 text-xl">${a.text.toUpperCase()}</span>
+                <span class="font-bold text-yellow-300 w-20 text-right">${a.points}</span>
+            `;
+            correct=true;
+        }
+    });
+
+    msgEl.textContent = correct ? "CORRECT!" : "NO MATCH FOUND";
+    ansInput.value="";
+
+    // Check if all revealed
+    if (q.answers.every(a=>a.revealed)) {
+        roundActive=false;
+        submitBtn.disabled=true;
+        ansInput.disabled=true;
+
+        if (round >= questions.length) finishGame();
+        else {
+            nextBtn.textContent="NEXT ROUND";
+            nextBtn.classList.remove("hidden");
+        }
+    }
+}
+
+function finishGame() {
+    if (score >= SCORE_THRESHOLD) {
+        portal.classList.remove("hidden");
+        portalLink.href = PROGRESSION_URL;
+        msgEl.textContent="Your knowledge has unlocked the Codex Gate.";
+    } else {
+        msgEl.textContent="Threshold not met — but progression honored.";
+        portal.classList.remove("hidden");
+        portalLink.href = PROGRESSION_URL;
+    }
+    nextBtn.textContent="RESTART";
+    nextBtn.classList.remove("hidden");
+}
+
+/* ---------------- EVENTS ---------------- */
+document.addEventListener("DOMContentLoaded", async ()=>{
+    await loadVaultQuestions();
+
+    submitBtn.onclick = submitAnswer;
+    nextBtn.onclick = ()=>{
+        if (round===0 || round>=questions.length) startGame();
+        else nextRound();
+    };
+
+    ansInput.addEventListener("keypress",(e)=>{
+        if (e.key==="Enter" && !submitBtn.disabled) submitAnswer();
+    });
+});
+</script>
+
+</body>
+</html>
