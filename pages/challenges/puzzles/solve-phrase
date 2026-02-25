@@ -1,0 +1,582 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
+    <title>Neon Phrase Solver</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Very dark background */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 10px;
+        }
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #161b22;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(100, 100, 255, 0.2); /* Neon glow effect */
+            padding: 20px;
+            border: 1px solid #30363d;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Phrase Display Styles --- */
+        .phrase-board {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px 4px;
+            margin-bottom: 24px;
+        }
+        .word-block {
+            display: flex;
+            gap: 4px;
+            margin-right: 12px;
+        }
+        .letter-box {
+            width: 35px;
+            height: 45px;
+            background-color: #21262d;
+            border: 2px solid #485775;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            transition: all 0.2s ease-out;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            line-height: 1; /* Keep text centered vertically */
+        }
+        .letter-box.revealed {
+            background-color: #0b69e5; /* Vibrant blue for revealed letters */
+            border-color: #2f95ff;
+            color: #e0f2fe;
+            box-shadow: 0 0 10px #2f95ff, inset 0 0 5px #f0f9ff80;
+            transform: scale(1.05);
+        }
+
+        /* --- Keyboard Button Styles --- */
+        .keyboard-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .key-btn {
+            width: 40px;
+            height: 50px;
+            padding: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e0f2fe;
+            background-color: #3b82f6; /* Default button color: Blue */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px #1d4ed8, 0 0 8px rgba(59, 130, 246, 0.5);
+        }
+        .key-btn:hover:not(:disabled) {
+            background-color: #60a5fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px #1d4ed8, 0 0 15px rgba(96, 165, 250, 0.7);
+        }
+        .key-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px #1d4ed8;
+        }
+        .key-btn:disabled {
+            cursor: not-allowed;
+        }
+        .key-btn.correct {
+            background-color: #10b981; /* Green for correct */
+            box-shadow: 0 4px #047857, 0 0 8px rgba(16, 185, 129, 0.8);
+        }
+        .key-btn.incorrect {
+            background-color: #ef4444; /* Red for incorrect */
+            box-shadow: 0 4px #b91c1c, 0 0 8px rgba(239, 68, 68, 0.8);
+        }
+
+        /* --- Utility & Message Box --- */
+        #message-box {
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fcd34d; /* Yellow for messages */
+            text-shadow: 0 0 5px rgba(252, 211, 77, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        /* New wrapper for SVG heart */
+        .life-svg-wrapper {
+            width: 28px; /* Control size via wrapper */
+            height: 28px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        /* Styling for the SVG heart inside the wrapper */
+        .life-svg-wrapper svg {
+            transition: all 0.2s;
+        }
+        .full-heart {
+            /* Applies a soft drop shadow/glow to the full hearts */
+            filter: drop-shadow(0 0 4px #dc2626); 
+        }
+
+        /* Portal Link Container */
+        .portal-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        /* Success Button Style (Green/Teal) */
+        .portal-success-btn {
+            background-color: #0d9488; /* Teal */
+            box-shadow: 0 6px #04785e, 0 0 20px rgba(13, 148, 136, 0.7);
+            padding: 15px 30px;
+            font-size: 1.5rem;
+        }
+        .portal-success-btn:hover {
+            background-color: #14b8a6;
+            transform: translateY(-4px);
+        }
+        /* Failure Button Style (Red/Orange) */
+        .portal-failure-btn {
+            background-color: #f97316; /* Orange */
+            box-shadow: 0 6px #ea580c, 0 0 20px rgba(249, 115, 22, 0.7);
+            padding: 15px 30px;
+            font-size: 1.5rem;
+        }
+        .portal-failure-btn:hover {
+            background-color: #fb923c;
+            transform: translateY(-4px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container text-white" id="app">
+        <h1 class="text-3xl font-extrabold text-center mb-6" style="color: #60a5fa; text-shadow: 0 0 10px #3b82f6;">
+            NEON PHRASE SOLVER
+        </h1>
+
+        <!-- Lives/Attempts Counter -->
+        <div class="flex justify-between items-center mb-6 p-3 rounded-lg bg-gray-800 shadow-inner">
+            <div class="text-lg font-semibold text-gray-300">
+                Category: Famous Sayings
+            </div>
+            <div class="flex items-center" id="lives-display">
+                <span class="text-sm mr-2 text-red-400 font-bold">WRONG GUESSES LEFT:</span>
+                <!-- SVG Hearts will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Phrase Display -->
+        <div class="phrase-board" id="phrase-board">
+            <!-- Game phrase will be rendered here -->
+        </div>
+
+        <!-- Game Messages -->
+        <div id="message-box">
+            Click a letter below to start!
+        </div>
+
+        <!-- Control Area (Keyboard or Portal Link) -->
+        <div class="p-4 bg-gray-900 rounded-xl" id="control-area">
+            <!-- Keyboard Controls (Initial structure) -->
+            <div class="keyboard-grid" id="keyboard-grid">
+                <!-- Buttons A-Z will be rendered here -->
+            </div>
+
+            <!-- Action Buttons (Visible during game) -->
+            <div class="flex justify-center mt-6 space-x-4" id="action-buttons">
+                <button class="py-2 px-6 rounded-lg font-semibold transition duration-150 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transform hover:scale-[1.03]" onclick="resetGame()">
+                    New Phrase
+                </button>
+                <button class="py-2 px-6 rounded-lg font-semibold transition duration-150 bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg transform hover:scale-[1.03]" id="solve-btn" onclick="solvePrompt()">
+                    Solve Phrase
+                </button>
+            </div>
+        </div>
+        
+        <!-- Custom Modal for Alerts/Prompts (No alert() allowed) -->
+        <div class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden items-center justify-center p-4" id="game-modal">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-sm border border-indigo-500">
+                <h3 class="text-2xl font-bold mb-4 text-center text-indigo-400" id="modal-title"></h3>
+                <p class="text-gray-300 mb-6 text-center" id="modal-message"></p>
+                <input class="w-full p-2 mb-4 bg-gray-700 text-white rounded hidden uppercase" id="modal-input" placeholder="Type your guess here..." type="text" />
+                <div class="flex justify-center space-x-4" id="modal-actions">
+                    <!-- Buttons go here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const PHRASES = [
+            "A LIGHT BULB MOMENT",
+            "MAKING THINGS HAPPEN",
+            "EVERY CLOUD HAS A SILVER LINING",
+            "KNOWLEDGE IS POWER",
+            "BETTER LATE THAN NEVER"
+        ];
+        const MAX_LIVES = 6;
+        const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // 🛑 IMPORTANT: REPLACE THESE PLACEHOLDER URLS WITH YOUR ACTUAL PORTAL LINKS!
+        const SUCCESS_PORTAL_URL = 'https://your-success-portal.com/next-challenge';
+        const FAILURE_PORTAL_URL = 'https://your-failure-portal.com/penalty-step';
+
+
+        // SVG Heart Icon (clean, vector graphic)
+        const HEART_SVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+                <path d="M11.645 20.91l-.007-.003-.002-.001m2.766 0c.265.176.55.334.845.474.307.143.616.27.935.385.441.157.886.299 1.341.424l.006.002.001.001c.288.082.576.155.871.218.473.101.954.175 1.444.226.5.051 1.01.077 1.53.077h.099c.307 0 .615-.018.916-.053 0-.002.001-.002.001-.002l.001-.002.001-.002c.303-.035.596-.08.887-.134.484-.093.96-.21 1.424-.356.326-.104.646-.22.955-.353.29-.126.574-.265.845-.413l.001-.001.006-.003.003-.002c.032-.018.064-.037.095-.057.185-.119.362-.249.531-.389.26-.208.51-.433.74-.674.129-.13.251-.267.368-.414.116-.146.225-.30.323-.466.046-.078.09-.158.132-.24l.001-.003.001-.002c.097-.184.184-.378.261-.58.077-.202.146-.41.206-.622.058-.205.106-.418.143-.635.035-.219.06-.443.074-.67.014-.228.019-.46.014-.693v-.029c-.005-.233-.017-.468-.035-.705-.018-.237-.044-.479-.08-.725-.07-.492-.178-.997-.33-1.517-.225-.75-.59-1.474-1.1-2.164-1.353-1.801-3.665-3.08-6.19-3.08-2.525 0-4.837 1.279-6.19 3.08-.51.69-.875 1.414-1.1 2.164-.152.52-.26 1.025-.33 1.517-.036.246-.062.488-.08.725-.018.237-.03.472-.035.705v.029c-.005-.233 0 .465.014.693.014.227.039.451.074.67.037.217.085.43.143.635.06.212.129.42.206.622.077.202.164.396.261.58l.001.002.001.003c.042.082.086.162.132.24.098.166.207.32.323.466.117.147.239.284.368.414.23.241.48.466.74.674.169.14.346.27.531.389.031.02.063.039.095.057l.003.002.006.003c.271.133.551.25.845.353.464.146.94.263 1.424.356.291.054.584.099.887.134l.001.002.001.002c0 .002.001.002.001.002.301.035.609.053.916.053h.099c.52 0 1.03-.026 1.53-.077.49-.051.971-.125 1.444-.226.295-.063.583-.136.871-.218l-.009-.006.002.001z"/>
+            </svg>
+        `;
+
+        // --- GAME STATE ---
+        let currentPhrase = '';
+        let revealedLetters = new Set();
+        let wrongGuesses = 0;
+        let lives = MAX_LIVES;
+        let gameActive = false;
+
+        // --- CACHED DOM ELEMENTS ---
+        const controlArea = document.getElementById('control-area');
+        const phraseBoard = document.getElementById('phrase-board');
+        const livesDisplay = document.getElementById('lives-display');
+        const messageBox = document.getElementById('message-box');
+        const modal = document.getElementById('game-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalInput = document.getElementById('modal-input');
+        const modalActions = document.getElementById('modal-actions');
+
+
+        // --- MODAL / MESSAGE LOGIC ---
+
+        /**
+         * Shows the custom modal for confirmation or input.
+         * @param {string} title
+         * @param {string} message
+         * @param {boolean} showInput
+         * @param {function} confirmAction - Function to run on confirm.
+         */
+        function showModal(title, message, showInput, confirmAction) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalActions.innerHTML = '';
+            
+            if (showInput) {
+                modalInput.classList.remove('hidden');
+                modalInput.value = '';
+            } else {
+                modalInput.classList.add('hidden');
+            }
+
+            // Confirm Button
+            const confirmBtn = document.createElement('button');
+            confirmBtn.textContent = showInput ? 'Guess' : 'OK';
+            confirmBtn.className = 'py-2 px-6 rounded-lg font-bold bg-green-600 hover:bg-green-700 text-white transition duration-150';
+            confirmBtn.onclick = () => {
+                hideModal();
+                confirmAction(showInput ? modalInput.value.toUpperCase().trim() : true);
+            };
+            modalActions.appendChild(confirmBtn);
+
+            // Cancel Button (for guess/prompt)
+            if (showInput) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'py-2 px-6 rounded-lg font-bold bg-gray-600 hover:bg-gray-700 text-white transition duration-150';
+                cancelBtn.onclick = hideModal;
+                modalActions.appendChild(cancelBtn);
+
+                // Focus on input for quick typing
+                setTimeout(() => modalInput.focus(), 100);
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function hideModal() {
+            modal.style.display = 'none';
+        }
+
+        function updateMessage(msg, color = '#fcd34d') {
+            messageBox.textContent = msg;
+            messageBox.style.color = color;
+            messageBox.style.textShadow = `0 0 5px ${color}80`;
+        }
+
+        // --- GAME LOGIC ---
+
+        function setupPhrase() {
+            // Select a random phrase
+            const randomIndex = Math.floor(Math.random() * PHRASES.length);
+            currentPhrase = PHRASES[randomIndex];
+
+            // Reset revealed letters and render the board
+            revealedLetters.clear();
+            renderPhrase();
+
+            // Reveal all spaces/punctuation immediately
+            for (const char of currentPhrase) {
+                if (!ALPHABET.includes(char)) {
+                    revealedLetters.add(char);
+                }
+            }
+        }
+
+        function renderPhrase() {
+            phraseBoard.innerHTML = '';
+            const words = currentPhrase.split(' ');
+
+            words.forEach(word => {
+                const wordBlock = document.createElement('div');
+                wordBlock.className = 'word-block';
+
+                for (const char of word) {
+                    const letterBox = document.createElement('div');
+                    letterBox.className = 'letter-box';
+                    
+                    if (ALPHABET.includes(char)) {
+                        // It's a letter, check if revealed
+                        if (revealedLetters.has(char)) {
+                            letterBox.textContent = char;
+                            letterBox.classList.add('revealed');
+                        } else {
+                            letterBox.textContent = ''; // Blank box
+                        }
+                    } else {
+                        // It's a symbol/punctuation (e.g., apostrophe), just show it
+                        letterBox.textContent = char;
+                        letterBox.style.backgroundColor = 'transparent';
+                        letterBox.style.borderColor = 'transparent';
+                        letterBox.style.boxShadow = 'none';
+                    }
+                    wordBlock.appendChild(letterBox);
+                }
+                phraseBoard.appendChild(wordBlock);
+            });
+        }
+
+        /**
+         * Renders the keyboard into the dynamically created keyboard-grid element.
+         */
+        function renderKeyboard() {
+            // FIX: Get the live element every time, as controlArea.innerHTML is overwritten in resetGame()
+            const liveKeyboardGrid = document.getElementById('keyboard-grid');
+            if (!liveKeyboardGrid) return; 
+
+            liveKeyboardGrid.innerHTML = '';
+            for (const char of ALPHABET) {
+                const button = document.createElement('button');
+                button.textContent = char;
+                button.className = 'key-btn';
+                button.id = `key-${char}`;
+                button.onclick = () => guessLetter(char);
+                liveKeyboardGrid.appendChild(button);
+            }
+        }
+
+        /**
+         * Renders the lives counter using SVG icons instead of text characters.
+         */
+        function renderLives() {
+            livesDisplay.innerHTML = `<span class="text-sm mr-2 text-red-400 font-bold">WRONG GUESSES LEFT:</span>`;
+            
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const heartWrapper = document.createElement('span');
+                heartWrapper.innerHTML = HEART_SVG; // Inject the SVG
+                heartWrapper.className = 'life-svg-wrapper'; 
+                
+                const svg = heartWrapper.querySelector('svg');
+
+                // Determine if this heart is still a 'life' or has been 'used up'
+                if (i < MAX_LIVES - wrongGuesses) { 
+                    // Heart is still full (i.e., not used up yet)
+                    svg.classList.add('text-red-500'); 
+                    svg.classList.add('full-heart'); // For CSS drop shadow
+                } else {
+                    // Heart is empty/used up
+                    svg.classList.add('text-gray-600'); // Empty/dark heart color
+                    svg.classList.add('empty-heart');
+                }
+                livesDisplay.appendChild(heartWrapper);
+            }
+        }
+
+        function checkWinCondition() {
+            // Check if all unique letters in the phrase have been revealed
+            const uniqueLetters = [...new Set(currentPhrase.match(/[A-Z]/g) || [])];
+            return uniqueLetters.every(char => revealedLetters.has(char));
+        }
+
+        /**
+         * End the game and show the appropriate portal link.
+         * @param {boolean} win - True if the player won, false otherwise.
+         */
+        function endGame(win) {
+            gameActive = false;
+            
+            const color = win ? '#10b981' : '#ef4444';
+            const finalMessage = win 
+                ? `VICTORY! The phrase was: ${currentPhrase}`
+                : `GAME OVER. The phrase was: ${currentPhrase}`;
+            
+            updateMessage(finalMessage, color);
+            
+            // Generate the appropriate portal link
+            const linkData = win ? { 
+                url: SUCCESS_PORTAL_URL, 
+                text: 'Proceed to Next Portal (Success)', 
+                className: 'portal-success-btn'
+            } : { 
+                url: FAILURE_PORTAL_URL, 
+                text: 'Proceed to Penalty Portal (Failure)', 
+                className: 'portal-failure-btn'
+            };
+
+            const portalLinkHtml = `
+                <div class="portal-container">
+                    <a href="${linkData.url}" target="_self" class="key-btn ${linkData.className} font-extrabold rounded-xl transition duration-300 transform hover:scale-[1.05] shadow-2xl">
+                        ${linkData.text}
+                    </a>
+                </div>
+            `;
+            
+            // Replace the entire control area content with the portal link
+            controlArea.innerHTML = portalLinkHtml;
+            showModal(win ? 'CHALLENGE CLEARED!' : 'CHALLENGE FAILED!', finalMessage, false, () => {});
+        }
+
+        function guessLetter(char) {
+            if (!gameActive || revealedLetters.has(char)) return;
+
+            const button = document.getElementById(`key-${char}`);
+            // Check if button exists before disabling (for safety)
+            if (!button) return; 
+            
+            button.disabled = true;
+
+            if (currentPhrase.includes(char)) {
+                // Correct Guess
+                revealedLetters.add(char);
+                button.classList.add('correct');
+                updateMessage(`Yes! There are ${[...currentPhrase].filter(c => c === char).length} ${char}'s!`, '#10b981');
+                renderPhrase();
+
+                if (checkWinCondition()) {
+                    endGame(true);
+                }
+            } else {
+                // Incorrect Guess
+                wrongGuesses++;
+                button.classList.add('incorrect');
+                updateMessage(`Sorry, no ${char}. Try again!`, '#ef4444');
+                renderLives();
+
+                if (wrongGuesses >= MAX_LIVES) {
+                    endGame(false);
+                }
+            }
+        }
+
+        function solvePrompt() {
+            if (!gameActive) return;
+
+            showModal(
+                'Final Guess', 
+                'Enter your guess for the entire phrase (type exactly as shown, including spaces):', 
+                true, 
+                (guess) => {
+                    if (guess === currentPhrase) {
+                        endGame(true);
+                    } else {
+                        // Penalty for incorrect solve attempt
+                        wrongGuesses += 2;
+                        renderLives();
+                        updateMessage(`Incorrect phrase guess! You lost 2 attempts.`, '#ef4444');
+                        if (wrongGuesses >= MAX_LIVES) {
+                            endGame(false);
+                        }
+                    }
+                }
+            );
+        }
+
+        function resetGame() {
+            // 1. Restore the base control structure (keyboard and action buttons)
+            controlArea.innerHTML = `
+                <div id="keyboard-grid" class="keyboard-grid"></div>
+                <div id="action-buttons" class="flex justify-center mt-6 space-x-4">
+                    <button
+                        onclick="resetGame()"
+                        class="py-2 px-6 rounded-lg font-semibold transition duration-150 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transform hover:scale-[1.03]"
+                    >
+                        New Phrase
+                    </button>
+                    <button
+                        onclick="solvePrompt()"
+                        id="solve-btn"
+                        class="py-2 px-6 rounded-lg font-semibold transition duration-150 bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg transform hover:scale-[1.03]"
+                    >
+                        Solve Phrase
+                    </button>
+                </div>
+            `;
+            
+            // 2. Reset state
+            wrongGuesses = 0;
+            lives = MAX_LIVES;
+            gameActive = true;
+            revealedLetters.clear();
+            
+            // 3. Render the keyboard into the newly created structure
+            renderKeyboard(); 
+
+            // 4. Reset button appearance (buttons are new, but good practice)
+            document.querySelectorAll('.key-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('correct', 'incorrect');
+            });
+            
+            // 5. Setup new game
+            setupPhrase();
+            renderLives();
+            updateMessage("A new game has begun. Choose a letter!", '#fcd34d');
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial call to populate the board and keyboard
+            resetGame(); 
+        });
+
+    </script>
+</body>
+</html>
