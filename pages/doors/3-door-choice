@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcane Gateways: Progression Portal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for a cosmic/magical effect */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #10061A 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #E0E7FF;
+        }
+
+        /* Custom glow animation for the doors */
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); }
+            50% { box-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
+            100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); }
+        }
+
+        .door-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-color);
+            animation: glowing 3s infinite ease-in-out;
+            transform: scale(1);
+        }
+
+        .door-card:hover {
+            transform: scale(1.05);
+            border-color: var(--glow-color);
+        }
+        
+        /* Specific color variables for each door */
+        .door-1 {
+            --glow-color: #3B82F6; /* Blue */
+            --border-color: #1E40AF;
+            --bg-color: #1E3A8A;
+        }
+        .door-2 {
+            --glow-color: #F87171; /* Red */
+            --border-color: #B91C1C;
+            --bg-color: #7F1D1D;
+        }
+        .door-3 {
+            --glow-color: #10B981; /* Green */
+            --border-color: #047857;
+            --bg-color: #065F46;
+        }
+        
+        .clicked-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            background-color: #fcd34d;
+            color: #92400e;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .clicked-message.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="message-box" class="clicked-message"></div>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-indigo-400 mb-4 tracking-wider">
+                THE JUNCTION OF REALITIES
+            </h1>
+            <p class="text-lg sm:text-xl text-gray-300">
+                Choose your path to progression. Three realms await.
+            </p>
+        </header>
+
+        <!-- Door Grid -->
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <!-- Door 1: The Labyrinth -->
+            <a href="#labyrinth" onclick="handleDoorClick('The Labyrinth', 'Labyrinth_Entrance.html')" 
+               class="door-card door-1 p-6 md:p-10 rounded-xl text-center shadow-2xl hover:shadow-blue-500/50">
+                <div class="text-6xl mb-4">🔮</div>
+                <h2 class="text-2xl font-bold mb-2 text-blue-300">The Labyrinth</h2>
+                <p class="text-gray-400 mb-4">
+                    The path of puzzles and secrets. Logic is your key.
+                </p>
+                <div class="inline-block py-2 px-6 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition duration-150">
+                    ENTER GATEWAY
+                </div>
+            </a>
+
+            <!-- Door 2: The Anomaly -->
+            <a href="#anomaly" onclick="handleDoorClick('The Anomaly', 'Anomaly_Core.html')" 
+               class="door-card door-2 p-6 md:p-10 rounded-xl text-center shadow-2xl hover:shadow-red-500/50">
+                <div class="text-6xl mb-4">🔥</div>
+                <h2 class="text-2xl font-bold mb-2 text-red-300">The Anomaly</h2>
+                <p class="text-gray-400 mb-4">
+                    The path of trials and endurance. Willpower is demanded.
+                </p>
+                <div class="inline-block py-2 px-6 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition duration-150">
+                    ENTER GATEWAY
+                </div>
+            </a>
+
+            <!-- Door 3: The Nexus -->
+            <a href="#nexus" onclick="handleDoorClick('The Nexus', 'Nexus_Hub.html')" 
+               class="door-card door-3 p-6 md:p-10 rounded-xl text-center shadow-2xl hover:shadow-green-500/50">
+                <div class="text-6xl mb-4">✨</div>
+                <h2 class="text-2xl font-bold mb-2 text-green-300">The Nexus</h2>
+                <p class="text-gray-400 mb-4">
+                    The path of destiny and knowledge. Insight is required.
+                </p>
+                <div class="inline-block py-2 px-6 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition duration-150">
+                    ENTER GATEWAY
+                </div>
+            </a>
+
+        </div>
+
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>Ready for the next step of your journey?</p>
+        </footer>
+    </div>
+
+    <script>
+        const handleDoorClick = (doorName, destination) => {
+            const messageBox = document.getElementById('message-box');
+            
+            // 1. Show message instead of alert()
+            messageBox.textContent = `Initiating sequence for ${doorName}... (Redirecting to ${destination})`;
+            messageBox.classList.add('visible');
+            
+            // 2. Add a momentary flash effect to the clicked door (optional, but lively!)
+            const targetDoor = document.querySelector(`a[href="#${doorName.toLowerCase().replace(/\s/g, '')}"]`);
+            if (targetDoor) {
+                targetDoor.classList.add('animate-pulse');
+                setTimeout(() => {
+                    targetDoor.classList.remove('animate-pulse');
+                }, 1000); // Pulse for 1 second
+            }
+
+            // 3. Simulate progression by redirecting (after a slight delay for the effect)
+            setTimeout(() => {
+                // In a real application, you would change window.location.href here.
+                // For this preview, we'll just remove the message.
+                // window.location.href = destination; 
+                messageBox.classList.remove('visible');
+                messageBox.textContent = '';
+                console.log(`Simulated navigation to: ${destination}`);
+            }, 2500); 
+        };
+    </script>
+
+</body>
+</html>
