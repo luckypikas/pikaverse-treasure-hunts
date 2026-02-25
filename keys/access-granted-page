@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Access Granted</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle at center, #2b1d00 0%, #0d0a00 100%);
+        font-family: 'Trebuchet MS', sans-serif;
+        color: #fbd66c;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    /* Animated Nebula Background */
+    .bg-animated {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('https://i.imgur.com/r9YqZpZ.jpg');
+        background-size: cover;
+        filter: brightness(0.45) blur(3px);
+        animation: nebulaMove 25s ease-in-out infinite alternate;
+        z-index: -2;
+    }
+
+    @keyframes nebulaMove {
+        0% { transform: scale(1) translateY(0px); }
+        100% { transform: scale(1.2) translateY(-40px); }
+    }
+
+    /* Floating Sparks */
+    .spark-container {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .spark {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: gold;
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: rise 6s linear infinite;
+    }
+
+    @keyframes rise {
+        from { transform: translateY(100vh); opacity: 0.1; }
+        to { transform: translateY(-10vh); opacity: 1; }
+    }
+
+    /* Center Portal Container */
+    .portal-container {
+        padding-top: 110px;
+    }
+
+    /* Title Glitch/Glow */
+    h1 {
+        font-size: 56px;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        text-shadow: 0 0 15px gold, 0 0 25px #ffa;
+        animation: glowPulse 2.6s infinite;
+    }
+
+    @keyframes glowPulse {
+        0%, 100% { text-shadow: 0 0 15px gold, 0 0 25px #ffa; }
+        50% { text-shadow: 0 0 25px #ffed9a, 0 0 45px gold; }
+    }
+
+    p {
+        font-size: 22px;
+        margin-bottom: 40px;
+        color: #ffeebf;
+        text-shadow: 0 0 6px #000;
+    }
+
+    /* Animated Portal Ring */
+    .portal-ring {
+        width: 240px;
+        height: 240px;
+        margin: 40px auto;
+        border-radius: 50%;
+        border: 6px solid rgba(255, 215, 80, 0.5);
+        box-shadow: 0 0 25px gold, inset 0 0 25px gold;
+        animation: spinRing 6s linear infinite;
+    }
+
+    @keyframes spinRing {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Primary Portal Button */
+    .portal-btn {
+        background: linear-gradient(135deg, #ffdd55, #d8a62a);
+        color: black;
+        padding: 18px 42px;
+        font-size: 26px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        letter-spacing: 1px;
+        box-shadow: 0 0 20px gold;
+        transition: 0.25s ease;
+    }
+
+    .portal-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 0 35px #ffe58a;
+    }
+
+    /* SECRET LINK — Hidden in plain sight */
+    .secret-link {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        font-size: 12px;
+        opacity: 0.2;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .secret-link:hover {
+        opacity: 1;
+        transform: scale(1.2);
+        color: #fff;
+    }
+</style>
+</head>
+<body>
+
+<div class="bg-animated"></div>
+<div class="spark-container">
+    <!-- Generate 30 floating sparks -->
+    <script>
+        for (let i = 0; i < 30; i++) {
+            const s = document.createElement("div");
+            s.classList.add("spark");
+            s.style.left = Math.random() * 100 + "vw";
+            s.style.animationDelay = Math.random() * 5 + "s";
+            s.style.opacity = Math.random() * 0.8 + 0.2;
+            document.querySelector(".spark-container").appendChild(s);
+        }
+    </script>
+</div>
+
+<div class="portal-container">
+    <h1>✨ ACCESS GRANTED ✨</h1>
+    <p>The portal awakens... your journey continues.</p>
+
+    <div class="portal-ring"></div>
+
+    <a href="next-page.html">
+        <button class="portal-btn">ENTER PORTAL →</button>
+    </a>
+</div>
+
+<!-- Hidden progression link -->
+<a
