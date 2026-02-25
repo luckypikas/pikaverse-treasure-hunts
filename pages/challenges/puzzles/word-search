@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Word Search Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937; /* Dark background */
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background-color: #374151; /* Medium dark container */
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 4px solid #f97316; /* Orange accent */
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 1px;
+            background-color: #4b5563; /* Grid lines/border */
+            border-radius: 0.5rem;
+            padding: 2px;
+            /* Max width for the grid to keep cells reasonably sized */
+            max-width: 900px; 
+            margin: auto;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1 / 1; /* Keep cells square */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(0.6rem, 2vw, 1.2rem);
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s ease-in-out, transform 0.05s;
+            color: #e5e7eb;
+            background-color: #1f2937;
+        }
+
+        .grid-cell:hover:not(.found):not(.selected) {
+            background-color: #4b5563;
+        }
+        
+        /* Selection and Found States */
+        .grid-cell.selected {
+            background-color: #3b82f6 !important; /* Blue for selection */
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .grid-cell.found {
+            background-color: #10b981; /* Green for found */
+            color: #1f2937;
+            animation: pulse-found 0.5s ease-out;
+            pointer-events: none; /* Disable clicking found words */
+        }
+
+        @keyframes pulse-found {
+            0% { transform: scale(1.0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1.0); }
+        }
+
+        /* Responsive Grid Styling (adjust based on actual grid size) */
+        /* Will be set dynamically by JS for optimal cell size */
+
+        .word-list-item {
+            cursor: default;
+            transition: color 0.3s;
+        }
+
+        .word-list-item.found-word {
+            text-decoration: line-through;
+            color: #10b981;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container rounded-xl p-6 lg:p-10 space-y-8">
+        <header class="text-center space-y-2">
+            <h1 class="text-4xl lg:text-5xl font-extrabold text-f97316">
+                THE CELEBRITY ZOO CIPHER
+            </h1>
+            <p class="text-lg text-gray-300">
+                Find <span id="foundCount">0</span> of <span id="targetCount">6</span> words to unlock the portal.
+            </p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Grid Area -->
+            <div id="wordGrid" class="grid-container flex-grow">
+                <!-- Grid Cells will be injected here -->
+            </div>
+
+            <!-- Side Panel (Word List & Controls) -->
+            <div class="w-full lg:w-96 space-y-6">
+                <!-- Word List -->
+                <div class="bg-gray-700 p-4 rounded-lg shadow-inner h-64 overflow-y-auto">
+                    <h2 class="text-xl font-bold mb-3 text-white border-b border-gray-500 pb-1">
+                        WORDS TO FIND:
+                    </h2>
+                    <ul id="wordList" class="grid grid-cols-2 gap-x-4 text-sm text-gray-200">
+                        <!-- Words will be injected here -->
+                    </ul>
+                </div>
+
+                <!-- Controls & Status -->
+                <div class="space-y-4">
+                    <div id="messageBox" class="p-3 rounded-lg text-center font-bold bg-yellow-600 text-yellow-50 hidden">
+                        Select the starting letter, then the ending letter.
+                    </div>
+
+                    <div id="progressionPortal" class="p-4 bg-green-600 text-white rounded-lg text-center hidden space-y-3">
+                        <h3 class="text-xl font-extrabold">PROGRESSION PORTAL UNLOCKED!</h3>
+                        <a href="https://vault.com/progression-link-2025" target="_blank" 
+                           class="inline-block px-6 py-2 bg-green-800 hover:bg-green-700 rounded-full font-bold transition duration-200 shadow-lg">
+                            ENTER THE NEXT CHALLENGE
+                        </a>
+                    </div>
+
+                    <button id="skipButton" onclick="skipChallenge()" 
+                            class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition duration-200 shadow-lg text-white">
+                        PASS CHALLENGE (Reveal Portal)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WORD_LIST_RAW = [
+            // 200+ Pop Culture, Celebrity, and Animal themed words
+            "LION", "TIGER", "BEAR", "WOLF", "FOX", "EAGLE", "SHARK", "WHALE", "DOLPHIN", "PANDA",
+            "KOALA", "KANGAROO", "ZEBRA", "GIRAFFE", "ELEPHANT", "HIPPO", "RHINO", "MONKEY", "GORILLA", "CHIMP",
+            "SLOTH", "SNAKE", "CROCODILE", "ALLIGATOR", "TURTLE", "FROG", "SALAMANDER", "PARROT", "OWL", "HAWK",
+            "FALCON", "PEACOCK", "FLAMINGO", "PENGUIN", "SEAL", "WALRUS", "OTTER", "BEAVER", "RACCOON", "SKUNK",
+            "BADGER", "WEASEL", "FERRET", "HEDGEHOG", "SQUIRREL", "CHIPMUNK", "RABBIT", "DEER", "MOOSE", "ELK",
+            "BUFFALO", "COW", "HORSE", "PIG", "SHEEP", "GOAT", "CHICKEN", "DUCK", "GOOSE", "TURKEY",
+            "CAT", "DOG", "HAMSTER", "GUINEAPIG", "MOUSE", "RAT", "JENNIFERANISTON", "LEONARDODICAPRIO", "BRAD", "ANGELINA",
+            "OPRAH", "BEYONCE", "JAYZ", "TAYLOR", "SWIFT", "DRAKE", "RIHANNA", "ADELE", "ED", "SHEERAN",
+            "KANYE", "WEST", "KIMKARDASHIAN", "KARDASHIAN", "JENNER", "HARRISONFORD", "SCARLETTJOHANSSON", "CHRISEVANS", "ROBERTDOWNEYJR", "TOM",
+            "HANKS", "MERYLSTREEP", "DENZELWASHINGTON", "JULIA", "ROBERTS", "WILLSMITH", "DWAYNEJOHNSON", "THE", "ROCK", "VIN",
+            "DIESEL", "GALGADOT", "EMMAWATSON", "DANIELRADCLIFFE", "RYAN", "GOSLING", "EMMA", "STONE", "SELENA", "GOMEZ",
+            "ARIANAGRANDE", "JUSTINBIEBER", "MICHAEL", "JORDAN", "LEBRON", "JAMES", "TIGERWOODS", "SERENA", "WILLIAMS", "TOMBRADY",
+            "STEPHENKING", "JKROWLING", "GEORGE", "RRMARTIN", "SPIELBERG", "CAMERON", "NOLAN", "FINCHER", "QUENTIN", "TARANTINO",
+            "FRIENDS", "SEINFELD", "SOPRANOS", "WIRE", "BREAKINGBAD", "GOT", "STRANGERTHINGS", "OUTFITTER", "MANDALORIAN", "WITCHER",
+            "BRIDGERTON", "QUEENSGAMBIT", "CROWN", "SUCCESSION", "TEDLASSO", "SCHITTSCREEK", "OFFICE", "PARKSANDREC", "BIGBANG", "THEORY",
+            "MODERNFAMILY", "SIMPSONS", "FAMILYGUY", "SOUTHPARK", "RICKANDMORTY", "STAR", "TREK", "STARWARS", "MARVEL", "DC",
+            "HARRYPOTTER", "LORD", "OF", "RINGS", "AVATAR", "TITANIC", "JURASSIC", "PARK", "PULP", "FICTION",
+            "MATRIX", "INCEPTION", "GODFATHER", "FIGHTCLUB", "INTERSTELLAR", "AVENGERS", "BATMAN", "SUPERMAN", "SPIDERMAN", "IRONMAN",
+            "HULK", "THOR", "CAPTAIN", "AMERICA", "BLACKWIDOW", "WONDERWOMAN", "AQUAMAN", "FLASH", "JOKER", "HARLEY",
+            "QUINN", "POKEMON", "ZELDA", "MARIO", "SONIC", "PLAYSTATION", "XBOX", "NINTENDO", "APPLE", "GOOGLE",
+            "AMAZON", "MICROSOFT", "TESLA", "SPACEX", "BILLGATES", "ELONMUSK", "JEFFBEZOS", "MARKZUCKERBERG", "TIMCOOK", "SUNDAR",
+            "PICHAI", "SATYANADELLA", "GATOS", "PERROS", "AVESTRUZ", "CONEJO", "LEOPARDO", "PANTERA", "CAIMAN", "TUCAN"
+        ].map(w => w.toUpperCase());
+
+        const GRID_SIZE = 30; // 30x30 grid
+        const WORDS_TO_HIDE = 25; // How many words will be placed in the grid
+        const WORDS_TO_FIND_TARGET = 6; // Goal for progression link
+
+        let grid = [];
+        let hiddenWords = []; // List of words placed in the grid, with coordinates
+        let foundWords = [];
+        let selectedCells = []; // Stores cell IDs [row, col]
+        let isChecking = false; // Flag to prevent rapid clicks
+
+        const DIRECTIONS = [
+            { r: 0, c: 1, name: 'Horizontal' },      // Right
+            { r: 0, c: -1, name: 'HorizontalBack' }, // Left
+            { r: 1, c: 0, name: 'Vertical' },       // Down
+            { r: -1, c: 0, name: 'VerticalUp' },     // Up
+            { r: 1, c: 1, name: 'DiagonalDownRight' },
+            { r: 1, c: -1, name: 'DiagonalDownLeft' },
+            { r: -1, c: 1, name: 'DiagonalUpRight' },
+            { r: -1, c: -1, name: 'DiagonalUpLeft' }
+        ];
+
+        // --- DOM Elements ---
+        const wordGridEl = document.getElementById('wordGrid');
+        const wordListEl = document.getElementById('wordList');
+        const foundCountEl = document.getElementById('foundCount');
+        const targetCountEl = document.getElementById('targetCount');
+        const messageBoxEl = document.getElementById('messageBox');
+        const progressionPortalEl = document.getElementById('progressionPortal');
+        
+        targetCountEl.textContent = WORDS_TO_FIND_TARGET;
+
+        // --- CORE LOGIC: WORD PLACEMENT ---
+
+        /** Initializes the empty grid */
+        function createEmptyGrid() {
+            grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+        }
+
+        /** Checks if a word can be placed at a given position and direction */
+        function canPlace(word, startR, startC, direction) {
+            let r = startR;
+            let c = startC;
+            const len = word.length;
+
+            for (let i = 0; i < len; i++) {
+                if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) {
+                    return false; // Out of bounds
+                }
+                if (grid[r][c] !== null && grid[r][c] !== word[i]) {
+                    return false; // Conflict with existing letter
+                }
+                r += direction.r;
+                c += direction.c;
+            }
+            return true;
+        }
+
+        /** Places a word into the grid */
+        function placeWord(word, startR, startC, direction) {
+            let r = startR;
+            let c = startC;
+            const len = word.length;
+            
+            for (let i = 0; i < len; i++) {
+                grid[r][c] = word[i];
+                r += direction.r;
+                c += direction.c;
+            }
+
+            // Store the word and its location for later validation
+            hiddenWords.push({
+                word: word,
+                start: [startR, startC],
+                end: [r - direction.r, c - direction.c], // Calculate the last cell used
+                direction: direction.name
+            });
+            return true;
+        }
+
+        /** Main function to select and place words */
+        function populateGrid() {
+            const availableWords = [...WORD_LIST_RAW];
+            let placedCount = 0;
+
+            // Try to place the target number of words
+            while (placedCount < WORDS_TO_HIDE && availableWords.length > 0) {
+                // 1. Pick a random word
+                const wordIndex = Math.floor(Math.random() * availableWords.length);
+                const word = availableWords[wordIndex];
+
+                if (word.length > GRID_SIZE || word.length < 3) {
+                    availableWords.splice(wordIndex, 1); // Remove if too long or too short
+                    continue;
+                }
+
+                let placed = false;
+                // Try placement attempts to prevent infinite loop
+                for (let attempt = 0; attempt < 100; attempt++) {
+                    const startR = Math.floor(Math.random() * GRID_SIZE);
+                    const startC = Math.floor(Math.random() * GRID_SIZE);
+                    const direction = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+
+                    if (canPlace(word, startR, startC, direction)) {
+                        placeWord(word, startR, startC, direction);
+                        placed = true;
+                        placedCount++;
+                        break;
+                    }
+                }
+
+                availableWords.splice(wordIndex, 1); // Remove the word whether placed or not
+                if (placed) {
+                    console.log(`Placed: ${word} (${placedCount}/${WORDS_TO_HIDE})`);
+                }
+            }
+
+            // Fill empty cells with random letters
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === null) {
+                        grid[r][c] = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random A-Z
+                    }
+                }
+            }
+            
+            // Limit the list displayed to the first 20 placed words for UI tidiness
+            const displayedWords = hiddenWords.slice(0, 20).map(hw => hw.word).sort();
+            renderWordList(displayedWords);
+        }
+
+        // --- UI RENDERING ---
+
+        /** Renders the initial grid in the DOM */
+        function renderGrid() {
+            wordGridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, minmax(0, 1fr))`;
+            wordGridEl.innerHTML = ''; // Clear previous grid
+            
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.id = `cell-${r}-${c}`;
+                    cell.textContent = grid[r][c];
+                    cell.setAttribute('data-r', r);
+                    cell.setAttribute('data-c', c);
+                    cell.addEventListener('click', handleCellClick);
+                    wordGridEl.appendChild(cell);
+                }
+            }
+        }
+
+        /** Renders the list of words to be found */
+        function renderWordList(words) {
+            wordListEl.innerHTML = '';
+            words.forEach(word => {
+                const li = document.createElement('li');
+                li.id = `list-item-${word}`;
+                li.className = 'word-list-item';
+                li.textContent = word;
+                wordListEl.appendChild(li);
+            });
+        }
+
+        /** Updates the count and checks for challenge completion */
+        function updateProgress() {
+            foundCountEl.textContent = foundWords.length;
+
+            if (foundWords.length >= WORDS_TO_FIND_TARGET) {
+                showProgressionPortal();
+            }
+        }
+        
+        /** Reveals the progression portal */
+        function showProgressionPortal() {
+            progressionPortalEl.classList.remove('hidden');
+            document.getElementById('skipButton').style.display = 'none';
+        }
+
+        // --- USER INTERACTION ---
+
+        /** Handles clicking a cell for selection */
+        function handleCellClick(event) {
+            if (isChecking) return;
+            
+            const cell = event.target;
+            const r = parseInt(cell.getAttribute('data-r'));
+            const c = parseInt(cell.getAttribute('data-c'));
+            const cellId = [r, c];
+            
+            if (cell.classList.contains('found')) {
+                messageBoxEl.textContent = "That word is already found!";
+                messageBoxEl.classList.remove('hidden', 'bg-yellow-600', 'bg-red-600');
+                messageBoxEl.classList.add('bg-blue-600');
+                return;
+            }
+
+            if (selectedCells.length === 0) {
+                // First click (Start)
+                selectedCells = [cellId];
+                cell.classList.add('selected');
+                messageBoxEl.textContent = "Start letter selected. Now click the END letter.";
+                messageBoxEl.classList.remove('hidden', 'bg-red-600');
+                messageBoxEl.classList.add('bg-yellow-600');
+
+            } else if (selectedCells.length === 1) {
+                // Second click (End)
+                selectedCells.push(cellId);
+                checkSelection(selectedCells);
+                
+            } else {
+                // Reset selection (shouldn't happen with the logic above, but for safety)
+                resetSelection();
+            }
+        }
+
+        /** Resets the selection state and visual cues */
+        function resetSelection() {
+            selectedCells.forEach(([r, c]) => {
+                const cell = document.getElementById(`cell-${r}-${c}`);
+                if (cell) cell.classList.remove('selected');
+            });
+            selectedCells = [];
+            messageBoxEl.textContent = "Select the starting letter, then the ending letter.";
+            messageBoxEl.classList.remove('bg-red-600', 'bg-blue-600');
+            messageBoxEl.classList.add('bg-yellow-600');
+        }
+
+        /** Checks if the selected path matches a hidden word */
+        function checkSelection(selection) {
+            isChecking = true;
+            const [startR, startC] = selection[0];
+            const [endR, endC] = selection[1];
+
+            // Determine direction vector
+            const dr = endR - startR;
+            const dc = endC - startC;
+
+            // Check if the selection forms a straight line (horizontal, vertical, or diagonal)
+            const isStraight = (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc));
+
+            if (!isStraight) {
+                messageBoxEl.textContent = "Invalid selection. Selection must be a straight line.";
+                messageBoxEl.classList.remove('bg-yellow-600', 'bg-blue-600');
+                messageBoxEl.classList.add('bg-red-600');
+                setTimeout(() => {
+                    resetSelection();
+                    isChecking = false;
+                }, 800);
+                return;
+            }
+
+            // Normalize the direction vector to get the step (r, c)
+            const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+            const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+            
+            // Build the string from the selected path
+            let currentR = startR;
+            let currentC = startC;
+            let selectedWord = "";
+            let pathCells = [];
+            
+            while (true) {
+                if (currentR < 0 || currentR >= GRID_SIZE || currentC < 0 || currentC >= GRID_SIZE) break;
+
+                selectedWord += grid[currentR][currentC];
+                pathCells.push([currentR, currentC]);
+                
+                if (currentR === endR && currentC === endC) break;
+                
+                currentR += stepR;
+                currentC += stepC;
+            }
+
+            // Check if the selected word matches any hidden word, or its reverse
+            const foundMatch = hiddenWords.find(hw => {
+                // Check normal direction (Start to End)
+                const isNormalMatch = hw.word === selectedWord &&
+                                      ((hw.start[0] === startR && hw.start[1] === startC) && 
+                                       (hw.end[0] === endR && hw.end[1] === endC));
+
+                // Check reverse direction (End to Start)
+                const reversedWord = selectedWord.split('').reverse().join('');
+                const isReverseMatch = hw.word === reversedWord &&
+                                       ((hw.start[0] === endR && hw.start[1] === endC) && 
+                                        (hw.end[0] === startR && hw.end[1] === startC));
+                                        
+                // If it's already found, we skip it here.
+                return (isNormalMatch || isReverseMatch) && !foundWords.includes(hw.word);
+            });
+
+            if (foundMatch) {
+                // FOUND!
+                foundWords.push(foundMatch.word);
+                updateProgress();
+                
+                // Highlight path and word list
+                pathCells.forEach(([r, c]) => {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (cell) {
+                        cell.classList.remove('selected');
+                        cell.classList.add('found');
+                    }
+                });
+                
+                const listItem = document.getElementById(`list-item-${foundMatch.word}`);
+                if (listItem) listItem.classList.add('found-word');
+                
+                messageBoxEl.textContent = `SUCCESS: "${foundMatch.word}" found! (${foundWords.length}/${WORDS_TO_FIND_TARGET})`;
+                messageBoxEl.classList.remove('bg-yellow-600', 'bg-red-600');
+                messageBoxEl.classList.add('bg-green-600');
+                
+                resetSelection(); // Selection is already highlighted as found, just clear state
+            } else {
+                // NOT FOUND
+                messageBoxEl.textContent = `ERROR: "${selectedWord}" is not one of the hidden words. Try again.`;
+                messageBoxEl.classList.remove('bg-yellow-600', 'bg-blue-600', 'bg-green-600');
+                messageBoxEl.classList.add('bg-red-600');
+                
+                // Flash the cells before resetting
+                setTimeout(() => {
+                    resetSelection();
+                }, 800);
+            }
+            
+            setTimeout(() => {
+                isChecking = false;
+            }, 500);
+        }
+        
+        /** Allows the player to skip the challenge */
+        function skipChallenge() {
+            // Confirm with custom modal (avoiding alert())
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50';
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg shadow-2xl text-center space-y-4 max-w-sm">
+                    <h4 class="text-xl font-bold text-red-400">ARE YOU SURE?</h4>
+                    <p class="text-gray-300">Skipping this challenge will immediately reveal the Progression Portal.</p>
+                    <div class="flex justify-around pt-2">
+                        <button id="confirmSkip" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">YES, SKIP</button>
+                        <button id="cancelSkip" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg font-bold">CANCEL</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('confirmSkip').onclick = () => {
+                showProgressionPortal();
+                messageBoxEl.textContent = 'Challenge Skipped. Portal Activated.';
+                messageBoxEl.classList.remove('hidden', 'bg-yellow-600', 'bg-red-600');
+                messageBoxEl.classList.add('bg-blue-600');
+                modal.remove();
+            };
+
+            document.getElementById('cancelSkip').onclick = () => {
+                modal.remove();
+            };
+        }
+
+        // --- GAME INITIALIZATION ---
+
+        /** Initializes the game */
+        function setupGame() {
+            foundWords = [];
+            selectedCells = [];
+            progressionPortalEl.classList.add('hidden');
+            document.getElementById('skipButton').style.display = 'block';
+            
+            createEmptyGrid();
+            populateGrid();
+            renderGrid();
+            updateProgress();
+            
+            messageBoxEl.classList.remove('hidden', 'bg-red-600', 'bg-blue-600', 'bg-green-600');
+            messageBoxEl.classList.add('bg-yellow-600');
+        }
+
+        document.addEventListener('DOMContentLoaded', setupGame);
+    </script>
+</body>
+</html>
