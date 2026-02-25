@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metaphysical Lore & Film Trivia Codex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+
+        /* Custom Theme: Neo-Mystical/Vault */
+        body {
+            font-family: 'Cinzel', serif;
+            background-color: #0c0a09; /* Stone Black */
+            color: #e5e7eb; /* Off-white text */
+            min-height: 100vh;
+        }
+        .codex-container {
+            background-color: #1c1917; /* Darker stone base */
+            box-shadow: 0 0 40px rgba(109, 40, 217, 0.4); /* Purple glow effect */
+            border: 3px solid #6d28d9; /* Deep Purple border */
+        }
+        .codex-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #a78bfa; /* Lavender/Violet color */
+            text-shadow: 0 0 10px #6d28d9;
+        }
+
+        /* Option Buttons */
+        .option-btn {
+            background-color: #292524;
+            color: #d1d5db;
+            border: 1px solid #44403c;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .option-btn:hover:not(.disabled) {
+            background-color: #44403c;
+            transform: scale(1.02);
+        }
+
+        /* Correct/Incorrect feedback */
+        .correct-answer {
+            background-color: #166534 !important; /* Green */
+            border-color: #4ade80 !important;
+            animation: pulse-correct 0.5s 2;
+        }
+        .incorrect-answer {
+            background-color: #7f1d1d !important; /* Red */
+            border-color: #fca5a5 !important;
+            animation: shake 0.5s;
+        }
+
+        /* Progression Portal Button */
+        .portal-btn {
+            background: linear-gradient(145deg, #a78bfa 0%, #6d28d9 100%); /* Violet gradient */
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 8px #fff;
+            box-shadow: 0 0 20px #a78bfa;
+            animation: pulse-violet 1.5s infinite;
+        }
+        .portal-btn:hover {
+            background: linear-gradient(145deg, #c4b5fd 0%, #8b5cf6 100%);
+        }
+
+        @keyframes pulse-violet {
+            0%, 100% { box-shadow: 0 0 20px #a78bfa; }
+            50% { box-shadow: 0 0 35px #a78bfa, 0 0 10px #fff; }
+        }
+        @keyframes pulse-correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+
+    <div class="w-full max-w-2xl codex-container rounded-3xl p-6 md:p-10 lg:p-12 shadow-2xl my-8">
+
+        <header class="text-center mb-8 border-b pb-4 border-violet-700">
+            <h1 class="text-3xl md:text-4xl font-extrabold codex-title mb-2">
+                THE TRIVIA CODEX
+            </h1>
+            <p class="text-sm text-gray-400 font-sans">Movie Lore & Metaphysical Checkpoint</p>
+        </header>
+
+        <main id="game-area">
+            <!-- Game UI loaded here -->
+
+            <!-- Score and Status -->
+            <div class="flex justify-between items-center mb-6 pt-4 border-t border-violet-800">
+                <div class="text-sm text-gray-400">
+                    Question: <span id="current-q-index" class="font-bold text-violet-300">0</span> / <span id="total-q-count" class="font-bold text-violet-300">0</span>
+                </div>
+                <div class="text-sm text-gray-400">
+                    Correct Answers: <span id="current-score" class="font-bold text-green-400">0</span>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="question-card" class="bg-black/50 p-6 rounded-xl border border-violet-800">
+                <p id="question-text" class="text-xl font-bold mb-6 text-white text-center">
+                    Click START to begin your Lore Check.
+                </p>
+                <div id="options-container" class="space-y-3">
+                    <!-- Options buttons are injected here -->
+                </div>
+                <button id="next-btn" class="codex-title w-full mt-6 py-3 rounded-lg text-lg font-bold bg-violet-900/50 hover:bg-violet-900 transition-colors hidden" onclick="nextQuestion()">
+                    NEXT SCROLL
+                </button>
+            </div>
+            
+            <!-- Result/Start Button -->
+            <button id="start-btn" class="codex-btn w-full mt-8 py-3 rounded-lg text-white font-bold uppercase tracking-wider bg-violet-600 hover:bg-violet-700 transition-colors" onclick="startGame()">
+                START LORE CHECK
+            </button>
+            
+        </main>
+
+        <!-- TREASURE HUNT / PROGRESSION AREA -->
+        <footer id="progression-footer" class="mt-8 p-6 rounded-xl border-2 border-dashed border-gray-700 bg-black/40 text-center hidden">
+            <p id="progression-status" class="text-lg font-semibold text-red-400 mb-4">
+                You must master the lore to continue.
+            </p>
+
+            <!-- The Progression Portal Link -->
+            <div id="portal-area" class="hidden">
+                <p class="text-xl font-semibold codex-title mb-4">
+                    KNOWLEDGE UNLOCKS THE WAY!
+                </p>
+                <a id="progression-portal" href="#" target="_self" class="portal-btn inline-block px-8 py-4 rounded-full text-xl font-extrabold shadow-lg transition duration-300 transform hover:scale-105">
+                    STEP INTO THE GLYPH
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- GAME CONFIGURATION ---
+        const GAME_SESSION_SIZE = 7; // Number of questions per session
+        const WIN_THRESHOLD = 5;     // Required correct answers to unlock portal
+        const PROGRESSION_URL = "https://example.com/vault-checkpoint-activated"; // Your Vault URL
+        
+        /**
+         * The full Trivia Library. This array can contain hundreds of objects.
+         * Structure: { question: string, options: string[], answer: string, category: string }
+         * NOTE: This is a representative sample. You can paste your full 200+ questions here.
+         */
+        const TRIVIA_DATA = [
+            // Category: The Matrix / Sci-Fi
+            { question: "What pill did Neo take to wake up in The Matrix?", options: ["The Green Pill", "The Blue Pill", "The Red Pill", "The Yellow Pill"], answer: "The Red Pill", category: "Matrix" },
+            { question: "In Dune (2021), what substance is crucial for intergalactic travel and is mined on Arrakis?", options: ["Spice Melange", "Ichor", "Vibranium", "Dilithium"], answer: "Spice Melange", category: "Sci-Fi" },
+            { question: "Who wrote the philosophical book 'The Yoga Sutras,' foundational to classical Yoga?", options: ["Siddhartha Gautama", "Patanjali", "Lao Tzu", "Adi Shankara"], answer: "Patanjali", category: "Metaphysical" },
+            { question: "Which fictional wizard lived at 'The Burrow' with his family?", options: ["Gandalf", "Radagast", "Ron Weasley", "Dumbledore"], answer: "Ron Weasley", category: "Wizards" },
+            { question: "In the context of chakra meditation, which color is associated with the Heart Chakra?", options: ["Red", "Blue", "Green", "Yellow"], answer: "Green", category: "Metaphysical" },
+            { question: "Before she was the Scarlet Witch, what was Wanda Maximoff's initial superpower in the MCU?", options: ["Telekinesis and Energy Manipulation", "Super Strength", "Time Travel", "Invisibility"], answer: "Telekinesis and Energy Manipulation", category: "Witches" },
+            { question: "Which classic horror film famously features the line: 'They're coming to get you, Barbara!'?", options: ["Psycho", "The Exorcist", "Night of the Living Dead", "Halloween"], answer: "Night of the Living Dead", category: "Horror" },
+            { question: "What is the name of the sentient computer in Stanley Kubrick's 2001: A Space Odyssey?", options: ["WOPR", "SKYNET", "HAL 9000", "Deep Thought"], answer: "HAL 9000", category: "Sci-Fi" },
+            { question: "What is the name of the main demon in The Exorcist (1973)?", options: ["Pazuzu", "Asmodeus", "Baphomet", "Belial"], answer: "Pazuzu", category: "Horror" },
+            { question: "In Lord of the Rings, what is Gandalf's order of Istari (Wizard) called?", options: ["The Blue", "The White", "The Grey", "The Brown"], answer: "The Grey", category: "Wizards" },
+            { question: "Which body part is the Root Chakra (Muladhara) traditionally associated with?", options: ["The Heart", "The Crown of the Head", "The Base of the Spine", "The Throat"], answer: "The Base of the Spine", category: "Yoga" },
+            { question: "Which 2017 horror film, directed by Jordan Peele, is a commentary on racial prejudice and features the 'Sunken Place'?", options: ["Us", "Hereditary", "Get Out", "It Follows"], answer: "Get Out", category: "Horror" },
+            { question: "What iconic phrase is associated with the 'Shiva' dance in cosmological Hinduism, symbolizing the cyclic nature of reality?", options: ["Om Shanti", "Tat Tvam Asi", "Aham Brahmasmi", "Tandava"], answer: "Tandava", category: "Gurus" },
+            { question: "What is the name of the main antagonist sorcerer in the MCU film Doctor Strange?", options: ["Dormammu", "Baron Mordo", "Kaecilius", "Thanos"], answer: "Kaecilius", category: "Wizards" },
+            { question: "Who played the role of the Wicked Witch of the West in the 1939 classic 'The Wizard of Oz'?", options: ["Judy Garland", "Billie Burke", "Margaret Hamilton", "Clara Blandick"], answer: "Margaret Hamilton", category: "Witches" },
+            { question: "In the 1982 film 'Blade Runner', what are the bioengineered humanoids called?", options: ["Synthoids", "Replicants", "Cylons", "Androids"], answer: "Replicants", category: "Sci-Fi" },
+            { question: "Which energy center (Chakra) is located between the eyebrows and is often called the 'Third Eye'?", options: ["Manipura", "Ajna", "Sahasrara", "Vishuddha"], answer: "Ajna", category: "Meditation" },
+            { question: "The Sanskrit word 'Asana' in Yoga primarily translates to what in English?", options: ["Breath", "Pose or Seat", "Meditation", "Binding"], answer: "Pose or Seat", category: "Yoga" },
+            { question: "What is the name of the organization that studies and contains anomalous entities in the film 'Cabin in the Woods' (2012)?", options: ["The Agency", "The Directorate", "The Facility", "The Organization"], answer: "The Facility", category: "Horror" },
+            { question: "In 'Harry Potter,' what is the term for a witch or wizard who cannot do magic?", options: ["Squib", "Muggle", "No-Maj", "Apothecary"], answer: "Squib", category: "Wizards" },
+        ];
+
+        // --- GAME STATE VARIABLES ---
+        let currentQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let answeredThisQ = false;
+        
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const startBtn = document.getElementById('start-btn');
+        const currentQIndexEl = document.getElementById('current-q-index');
+        const totalQCountEl = document.getElementById('total-q-count');
+        const currentScoreEl = document.getElementById('current-score');
+        const portalArea = document.getElementById('portal-area');
+        const progressionFooter = document.getElementById('progression-footer');
+        const progressionStatus = document.getElementById('progression-status');
+        const progressionPortal = document.getElementById('progression-portal');
+
+        // --- HELPER FUNCTIONS ---
+
+        /** Shuffles an array using the Fisher-Yates algorithm. */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /** Randomly selects a subset of questions. */
+        function selectRandomQuestions() {
+            shuffleArray(TRIVIA_DATA);
+            // Ensure we don't try to select more questions than exist
+            const size = Math.min(GAME_SESSION_SIZE, TRIVIA_DATA.length);
+            return TRIVIA_DATA.slice(0, size);
+        }
+
+        // --- GAME LOGIC ---
+
+        function startGame() {
+            currentQuestions = selectRandomQuestions();
+            currentQIndex = 0;
+            score = 0;
+            answeredThisQ = false;
+
+            // Update UI initial state
+            startBtn.classList.add('hidden');
+            progressionFooter.classList.add('hidden');
+            portalArea.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            totalQCountEl.textContent = currentQuestions.length;
+            
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            if (currentQIndex >= currentQuestions.length) {
+                // End of session
+                endGame();
+                return;
+            }
+
+            const q = currentQuestions[currentQIndex];
+            answeredThisQ = false;
+            nextBtn.classList.add('hidden');
+            
+            // Update question counter
+            currentQIndexEl.textContent = currentQIndex + 1;
+            currentScoreEl.textContent = score;
+
+            // Set question text
+            questionTextEl.textContent = `${currentQIndex + 1}. ${q.question}`;
+
+            // Render options
+            let options = [...q.options];
+            shuffleArray(options); // Shuffle options order
+            optionsContainer.innerHTML = '';
+            
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'option-btn w-full p-3 rounded-lg font-sans text-sm md:text-base';
+                button.onclick = () => checkAnswer(button, option, q.answer);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedButton, selectedOption, correctAnswer) {
+            if (answeredThisQ) return; // Prevent double-clicking
+
+            answeredThisQ = true;
+            nextBtn.classList.remove('hidden');
+
+            // Disable all option buttons
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.classList.add('disabled');
+                btn.onclick = null; // Remove listener
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add('correct-answer'); // Highlight correct answer
+                }
+            });
+
+            // Check if the selected answer is correct
+            if (selectedOption === correctAnswer) {
+                score++;
+                currentScoreEl.textContent = score;
+            } else {
+                selectedButton.classList.add('incorrect-answer'); // Highlight user's incorrect choice
+            }
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            renderQuestion();
+        }
+
+        function endGame() {
+            startBtn.textContent = 'RESTART LORE CHECK';
+            startBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            progressionFooter.classList.remove('hidden');
+
+            questionTextEl.textContent = `LORE CHECK COMPLETE. Score: ${score} / ${currentQuestions.length}`;
+            optionsContainer.innerHTML = `<p class="text-center text-gray-400">Total Correct: <span class="font-bold text-green-400">${score}</span></p>`;
+
+            // Progression Check
+            if (score >= WIN_THRESHOLD) {
+                progressionStatus.textContent = `INITIATION SUCCESSFUL! Score ${score}/${currentQuestions.length} meets the threshold (${WIN_THRESHOLD}).`;
+                progressionStatus.classList.remove('text-red-400');
+                progressionStatus.classList.add('text-green-400');
+                
+                progressionPortal.href = PROGRESSION_URL;
+                portalArea.classList.remove('hidden');
+            } else {
+                progressionStatus.textContent = `INITIATION FAILED. Score ${score}/${currentQuestions.length}. Required: ${WIN_THRESHOLD}. Rerun the check.`;
+                progressionStatus.classList.remove('text-green-400');
+                progressionStatus.classList.add('text-red-400');
+                portalArea.classList.add('hidden');
+            }
+        }
+
+        // --- INITIAL SETUP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            totalQCountEl.textContent = GAME_SESSION_SIZE; // Set the session size display
+            progressionPortal.href = PROGRESSION_URL;
+        });
+
+    </script>
+</body>
+</html>
