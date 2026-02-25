@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead End: The Sealed Passage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #3e2723; /* Dark earthy brown */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #f3f4f6;
+            padding: 20px;
+        }
+
+        .brick-wall {
+            width: 100%;
+            height: 100%;
+            /* Custom CSS for brick pattern */
+            background-color: #795548; /* Base brick color */
+            background-image:
+                linear-gradient(90deg, transparent 49%, #5d4037 49%, #5d4037 51%, transparent 51%),
+                linear-gradient(#5d4037 1px, transparent 1px);
+            background-size: 50px 30px;
+            background-position: 0 0, 25px 0;
+            border: 10px solid #4e342e;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .wall-message {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ffcc80; /* Light orange warning border */
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .back-button {
+            background-color: #f97316;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #ea580c;
+        }
+        .back-button:hover {
+            background-color: #ea580c;
+        }
+        .back-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #c2410c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brick-wall flex flex-col justify-center items-center p-8 rounded-lg max-w-xl">
+        <div class="wall-message p-6 rounded-lg text-center space-y-4">
+            <h1 class="text-4xl font-extrabold text-red-500 uppercase tracking-wider">
+                DEAD END
+            </h1>
+            <p class="text-xl text-yellow-300 font-semibold">
+                The way forward has been sealed with concrete and ancient masonry. This path is impassable.
+            </p>
+            <p class="text-sm text-gray-400">
+                // Redirecting to previous node required //
+            </p>
+        </div>
+
+        <button onclick="goBack()" class="back-button mt-10 px-8 py-3 rounded-lg font-bold text-white text-lg">
+            &lt; GO BACK
+        </button>
+    </div>
+
+    <script>
+        function goBack() {
+            // This function takes the player to the previous page in their browser history.
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
