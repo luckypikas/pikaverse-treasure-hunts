@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead End: Encrypted Glitch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1a26; /* Very dark blue-gray */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #d1d5db;
+            padding: 20px;
+        }
+
+        .glitch-screen {
+            background-color: #1f2937; /* Dark container */
+            border: 5px solid #10b981; /* Neon green border */
+            box-shadow: 0 0 20px #10b981;
+            position: relative;
+        }
+
+        .terminal-text {
+            font-family: 'VT323', monospace;
+            color: #059669; /* Brighter neon green for text */
+            text-shadow: 0 0 5px #059669;
+            animation: text-pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes text-pulse {
+            from { opacity: 0.8; }
+            to { opacity: 1.0; }
+        }
+
+        .glitch-effect::before, .glitch-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: #1f2937;
+        }
+
+        .glitch-effect::before {
+            color: #ef4444; /* Red channel */
+            z-index: -1;
+            animation: glitch-anim-1 2s infinite alternate-reverse;
+        }
+
+        .glitch-effect::after {
+            color: #3b82f6; /* Blue channel */
+            z-index: -2;
+            animation: glitch-anim-2 2s infinite alternate-reverse;
+        }
+
+        /* Glitch animations - quick random shifts */
+        @keyframes glitch-anim-1 {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, 0); }
+            100% { transform: translate(0, 1px); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { transform: translate(-1px, -1px); }
+            50% { transform: translate(1px, 1px); }
+            100% { transform: translate(-1px, 0); }
+        }
+
+        .back-button {
+            background-color: #ef4444;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #dc2626;
+        }
+        .back-button:hover {
+            background-color: #dc2626;
+        }
+        .back-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b91c1c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glitch-screen rounded-xl p-10 max-w-xl w-full text-center space-y-6">
+        
+        <div class="relative terminal-text p-6 border-b border-t border-gray-600">
+            <h1 class="text-5xl font-extrabold uppercase tracking-widest glitch-effect" data-text="ERROR 404">
+                ERROR 404
+            </h1>
+            <p class="text-2xl mt-4">
+                <span class="text-red-500">//</span> CRITICAL FAILURE: PATH INTEGRITY LOST <span class="text-red-500">//</span>
+            </p>
+        </div>
+
+        <p class="text-xl text-gray-400 font-semibold">
+            The data stream has been corrupted. This section of the Vault is experiencing a cascading electrical and protocol breakdown. Do not proceed.
+        </p>
+
+        <p class="text-sm terminal-text pt-4">
+            [ACCESS_VECTOR_STATUS: INACTIVE] [CODE_VALIDATION: FALSE] [RETRY: 00:00:00]
+        </p>
+
+        <button onclick="goBack()" class="back-button mt-6 px-8 py-3 rounded-lg font-bold text-white text-lg">
+            &lt; DISCONNECT & RETURN
+        </button>
+    </div>
+
+    <script>
+        function goBack() {
+            // This function takes the player to the previous page in their browser history.
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
