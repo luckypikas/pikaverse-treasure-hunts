@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Penalty Portal</title>
+<style>
+body {
+  background: linear-gradient(180deg, #3A0000, #7B0000);
+  font-family: Arial;
+  text-align: center;
+  padding-top: 80px;
+  color: white;
+}
+button {
+  background: white;
+  color: red;
+  padding: 15px 30px;
+  font-size: 22px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover {
+  transform: scale(1.05);
+}
+</style>
+</head>
+<body>
+
+<h1>⚠️ INCORRECT — YOU'VE BEEN SENT BACK</h1>
+<p>Try the challenge again, or take the setback path.</p>
+
+<a href="retry.html">
+  <button>TRY AGAIN</button>
+</a>
+
+</body>
+</html>
