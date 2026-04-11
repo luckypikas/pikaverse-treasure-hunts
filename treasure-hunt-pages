@@ -1,5 +1,6 @@
 start (first challenge: optional key requirement)
 end (last challenge: optional key requirement to complete)
+welcome/storyline/instruction (also referred to as "normal"; this node is for creators/hosts to express the lore, goal, etc. of the hunt)
 portal ("portals" can contain messages; can be traps; can be checkpoints; can be dead-ends or lead to nowhere; "portals" can also be "completion pages", congratulation pages, welcome pages)
 puzzle
 riddle
@@ -12,6 +13,7 @@ doors (choices - 2-door, 3-door, or 4-door)
 dead-end
 tools (decoder, persona/guide, news command center - messages/clues/directives sent by hosts/game masters, dual screen notepad - used by hunters for comparing messages, challenges, completions, and clues side-by-side, etc.)
 mystery boxes (rewards and penalties)
+
 
 
 GENESIS KEY - https://luckypikasgo.blogspot.com/p/genesis-key.html
