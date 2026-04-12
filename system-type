@@ -1,0 +1,37 @@
+ The Pikaverse Treasure Hunt Platform is a hybrid system. 
+
+ C - Hybrid --> the hunts have a beginning and end. players will have to solve specific challenges, but some challenges might take the player on a longer route (penalty) or a shorter route (reward). players might have certain checkpoints they have to use "keys" or other confirmations for. players may end up in portals with "mystery boxes" or "tools" (decoder, persona, dual screen notepad, etc). players may encounter "doors" (mazes) and those mazes may have portals that bypass certain checkpoints. players may encounter "sponsor" shortcuts (portal), etc. 
+
+ A hybrid hunt engine fits what you described because it can preserve a clear beginning/end while still allowing branching routes, shortcuts, detours, keys, checkpoints, and optional side systems without turning every hunt into a huge branching tree. That matches the general distinction between linear narrative, branching narrative, and systems that keep a main path but allow controlled deviations.
+
+The three models
+Linear means the hunt is basically one authored path from start to finish. It is easiest to build and debug, but it is the least flexible for things like sponsor shortcuts, maze bypasses, or optional reward routes.
+
+Dynamic means the engine can freely redirect the player based on conditions, state, or procedural rules. That gives you the most flexibility, but it can become hard to author, test, and keep feeling coherent unless you put strong guardrails around it.
+
+Hybrid means you keep a mostly authored main route, but allow controlled deviations: alternative routes, trap outcomes, portals, key gates, rewards, and conditional bypasses. That’s the best fit when you want a beginning and end, but also want player choice and route variation.
+
+What your platform needs
+From what you described, your hunts are not purely linear because you want:
+
+keys and confirmation checkpoints,
+
+portals and sponsor shortcuts,
+
+mystery boxes and tools,
+
+mazes with bypasses,
+
+longer or shorter routes based on player decisions.
+
+That is exactly the kind of structure hybrid engines are good at because they support an authored backbone with optional branching and route logic.
+
+
+Hybrid
+Most nodes are linear
+
+Some nodes offer choices
+
+Optional branching
+
+Best of both worlds
