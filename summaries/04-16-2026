@@ -1,0 +1,348 @@
+this is just an update to let you know where we are with the Pikaverse project. no need to do anything except let the world know. I'll be back. -->
+
+🧾 PIKAVERSE TREASURE HUNT PLATFORM — CURRENT STATE
+🧠 PROJECT OVERVIEW
+
+We are building a:
+
+code
+Text
+download
+content_copy
+expand_less
+Node-based Treasure Hunt Creator + Game Engine Platform
+
+Two sides:
+
+🟢 Admin (Creator Tool)
+
+Desktop-only
+
+Build hunts visually
+
+Node-based system
+
+🔵 Player Engine (Game)
+
+Runs hunts
+
+Mobile-friendly
+
+Interactive experience
+
+🧱 CORE ARCHITECTURE
+code
+Text
+download
+content_copy
+expand_less
+Admin → CreatorIntegration → localStorage → Game Engine → Player UI
+🟢 ADMIN SYSTEM (STABLE)
+✔ Hunt Manager
+
+Create hunts
+
+Rename hunts
+
+Delete hunts
+
+Switch between hunts
+
+Public / Private
+
+Access codes
+
+✔ Node Editor
+
+Node types:
+
+start
+
+story
+
+puzzle
+
+portal
+
+end
+
+Fields:
+
+title
+
+body
+
+nextNodeId
+
+portalTargets (label + id)
+
+UI settings:
+
+backgroundImage
+
+textColor
+
+fontFamily
+
+accentColor
+
+✔ Map Editor
+
+Drag nodes
+
+Connect nodes
+
+Delete nodes
+
+Clear connections
+
+Hover glow
+
+Node selection
+
+Pan
+
+Zoom
+
+Reset view
+
+Center view
+
+Mini-map (basic)
+
+🔵 GAME ENGINE (STABLE BASELINE)
+✔ Rendering System
+
+Each node displays:
+
+code
+Text
+download
+content_copy
+expand_less
+Title
+Body (if present)
+Interaction (portal / continue / puzzle)
+✔ Node Types Behavior
+start / story / end
+
+Show content
+
+Continue button
+
+puzzle
+
+Show question
+
+Validate input
+
+Correct → next node
+
+Wrong → feedback
+
+portal
+
+Multiple choices
+
+Each choice → different node
+
+🎮 PLAYER FEATURES
+✔ Entry System
+
+Choose hunt from list
+
+Enter access code
+
+Load via URL
+
+✔ Share System
+code
+Text
+download
+content_copy
+expand_less
+game.html?huntId=...
+✔ Audio System
+
+click
+
+correct
+
+wrong
+
+transition
+
+✔ Visual System
+
+Background images per node
+
+Dark overlay
+
+Theme system:
+
+textColor
+
+fontFamily
+
+accentColor
+
+⚠️ CURRENT KNOWN ISSUES
+❌ Portal Ghost Entries (fixed previously, but reverted)
+
+Empty portalTargets still render
+
+Needs safe filtering (to re-add later)
+
+❌ Resume on Refresh (attempted, but caused issues)
+
+Currently resets to first node
+
+Needs safer implementation later
+
+❌ Mini-map Interaction
+
+View only (working)
+
+Click/drag not stable → paused
+
+❌ Audio UI
+
+Removed due to instability
+
+Needs reimplementation as separate UI (not per-node)
+
+🧠 IMPORTANT LESSONS LEARNED
+🔴 DO NOT:
+
+Rewrite entire files
+
+Change multiple systems at once
+
+Touch working logic unnecessarily
+
+🟢 DO:
+
+Add features incrementally
+
+Modify one system at a time
+
+Preserve stable baseline
+
+🎯 CURRENT STATUS
+code
+Text
+download
+content_copy
+expand_less
+✔ Core system working
+✔ Creator workflow working
+✔ Gameplay loop working
+✔ Visual system working
+✔ Audio system working
+
+→ Platform is FUNCTIONAL and STABLE
+🚀 NEXT PHASE (RECOMMENDED ORDER)
+🟢 PHASE 1 — POLISH (SAFE)
+
+Portal UI polish (DONE)
+
+Background + overlay (DONE)
+
+Theme system (DONE)
+
+Fix portal delete UI (small fix)
+
+🟡 PHASE 2 — UX IMPROVEMENTS
+
+Portal choice removal button
+
+Center “Hunt Complete” (DONE)
+
+Node templates
+
+Better onboarding for creators
+
+🔵 PHASE 3 — GAME FEEL
+
+Fade transitions between nodes
+
+Sound UI (separate panel or modal)
+
+Background transitions
+
+🟣 PHASE 4 — GAMEPLAY SYSTEMS
+
+Timer system
+
+Flags / conditions
+
+Branching logic improvements
+
+⚫ PHASE 5 — PLATFORM FEATURES
+
+Cloud storage (replace localStorage)
+
+Shareable hunts across devices
+
+User accounts
+
+🧭 DESIGN PRINCIPLES (LOCK THESE IN)
+code
+Text
+download
+content_copy
+expand_less
+1. Stability > Features
+2. Incremental updates only
+3. Separate Admin vs Game concerns
+4. UI layers (core / optional / advanced)
+5. Creator-first experience
+🟢 WHERE WE LEFT OFF
+
+You reverted to a fully working version
+
+Some experimental features were rolled back
+
+System is stable again
+
+🎯 NEXT STEP WHEN YOU RETURN
+
+Say:
+
+code
+Text
+download
+content_copy
+expand_less
+“fix portal remove button (safe)”
+
+That’s the best next step:
+
+small
+
+isolated
+
+no risk
+
+improves usability immediately
+
+🧠 FINAL NOTE
+
+You are no longer debugging.
+
+You are now:
+
+code
+Text
+download
+content_copy
+expand_less
+Designing a platform
+
+And you’re doing it the right way:
+
+cautious
+
+structured
+
+iterative
