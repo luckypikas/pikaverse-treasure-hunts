@@ -1,0 +1,814 @@
+Mike — **perfect call** choosing **A + B**.  
+Keeping the **Node Timer** *and* adding a **Global Hunt Timer** gives you two different pressure systems that work together like a real escape‑room engine.
+
+Let me break this down cleanly, so you see exactly what you now have — and what you can build next.
+
+---
+
+# ⭐ You Now Have Two Timer Systems (by design)
+
+## **1. Node Timer (local, per‑room)**
+This is the one we just built.
+
+It’s meant for:
+
+- “Find the hidden phrase before time runs out”
+- “Decode the message quickly”
+- “Spot the clue in the paragraph”
+- “Read the lore and extract the secret word”
+- “Solve this micro‑challenge under pressure”
+- “Trap room — countdown begins”
+- “Penalty room — wait or solve to escape”
+- “Timed reveal — story unlocks after countdown”
+
+This is **not** a puzzle by itself — it’s a **time pressure wrapper** around whatever content you put in the node.
+
+You can turn ANY node into a timed challenge by:
+
+- Setting `type = "timer"`
+- Putting the challenge text in the **Body**
+- Adding a **Next Node** that leads to the puzzle or reward
+
+Or…
+
+You can combine it with a puzzle:
+
+- Node 1: Timer (read the clue fast)
+- Node 2: Puzzle (solve the clue)
+
+This is how real escape rooms pace tension.
+
+---
+
+## **2. Global Hunt Timer (full‑run countdown)**
+This is what you *thought* you were getting originally — and we’re adding it next.
+
+This timer:
+
+- Starts when the hunt begins
+- Continues across all nodes
+- Never resets
+- Lives in the HUD
+- Sits in the top‑right corner
+- Ends the hunt when it hits zero
+- Creates real urgency
+
+This is the “escape room clock,” the “race clock,” the “speedrun timer.”
+
+And yes — we’ll put it in the **top‑right corner**, matching your Node Timer placement.
+
+---
+
+# ⭐ What challenges can the Node Timer create?
+
+Here are **high‑pressure, high‑fun** mechanics you can build with the Node Timer:
+
+---
+
+## **1. “Read Fast” Clue Nodes**
+Players must read a short paragraph and extract:
+
+- a hidden word  
+- a number  
+- a symbol  
+- a phrase  
+- a location  
+- a riddle answer  
+
+before the timer expires.
+
+---
+
+## **2. “Spot the Difference” (text version)**
+Show two paragraphs with subtle differences.
+
+Players must identify:
+
+- the missing word  
+- the changed phrase  
+- the incorrect detail  
+
+before time runs out.
+
+---
+
+## **3. “Flash Memory” Nodes**
+Show a list of:
+
+- numbers  
+- symbols  
+- colors  
+- directions  
+- names  
+
+for 5–10 seconds.
+
+Then auto‑advance to a puzzle node where they must recall them.
+
+---
+
+## **4. “Timed Story Reveal”**
+A dramatic story node that:
+
+- reveals lore  
+- builds tension  
+- sets up a twist  
+
+and then auto‑advances.
+
+Perfect for pacing.
+
+---
+
+## **5. “Trap Rooms”**
+Classic escape room mechanic:
+
+- Timer starts  
+- Player must wait  
+- Or find a hidden skip button  
+- Or solve a micro‑puzzle in the text  
+
+You can hide clues in the body text.
+
+---
+
+## **6. “Timed Portal Decision”**
+Combine with portals:
+
+- Node Timer starts  
+- Player must choose a portal before time runs out  
+- If timer hits zero → default portal triggers  
+
+This creates **panic decisions**.
+
+---
+
+## **7. “Timed Key Reveal”**
+Timer counts down → at zero:
+
+- A key is added to inventory  
+- A clue is revealed  
+- A portal unlocks  
+
+This is great for story pacing.
+
+---
+
+## **8. “Timed Failure”**
+If timer hits zero:
+
+- Player is sent to a penalty node  
+- Or loses a metaphysics stat  
+- Or loses a key  
+- Or gets a “fog penalty”  
+
+This ties beautifully into your metaphysics system.
+
+---
+
+# ⭐ What we add next: **Global Hunt Timer**
+
+Here’s what I’ll implement for you:
+
+### **Admin Side**
+- Add “Global Hunt Timer (seconds)” to Hunt Settings
+- Save it in `hunt.metadata.globalTimerSeconds`
+
+### **Player Side**
+- Add a top‑right global countdown HUD element
+- Start it when the hunt begins
+- Continue it across all nodes
+- Stop it only when the hunt ends
+- If it hits zero → trigger a “Hunt Failed” screen
+
+### **Game Loop**
+- Integrate global timer into `gameLoop.js`
+- Ensure it doesn’t conflict with Node Timer
+- Ensure metaphysics still works
+- Ensure puzzles still work
+- Ensure portals still work
+
+### **HUD**
+- Add a clean, minimal timer display
+- Styled using node UI theme (textColor, accentColor)
+
+---
+
+# ⭐ Your next step
+
+Before I generate the Global Timer upgrade, I need one small thing:
+
+### **Where should the Global Timer appear relative to the Node Timer?**
+
+Choose:
+
+### **A — Global Timer above Node Timer (stacked)**  
+```
+⏱ GLOBAL: 12:34
+⏱ NODE: 8s
+```
+
+### **B — Global Timer replaces Node Timer while active**  
+(Only one timer visible at a time)
+
+### **C — Global Timer left, Node Timer right**  
+```
+GLOBAL: 12:34        NODE: 8s
+```
+
+### **D — You choose the cleanest layout**
+
+Pick one, and I’ll build the full Global Timer system cleanly and safely.Mike — **perfect call** choosing **A + B**.  
+Keeping the **Node Timer** *and* adding a **Global Hunt Timer** gives you two different pressure systems that work together like a real escape‑room engine.
+
+Let me break this down cleanly, so you see exactly what you now have — and what you can build next.
+
+---
+
+# ⭐ You Now Have Two Timer Systems (by design)
+
+## **1. Node Timer (local, per‑room)**
+This is the one we just built.
+
+It’s meant for:
+
+- “Find the hidden phrase before time runs out”
+- “Decode the message quickly”
+- “Spot the clue in the paragraph”
+- “Read the lore and extract the secret word”
+- “Solve this micro‑challenge under pressure”
+- “Trap room — countdown begins”
+- “Penalty room — wait or solve to escape”
+- “Timed reveal — story unlocks after countdown”
+
+This is **not** a puzzle by itself — it’s a **time pressure wrapper** around whatever content you put in the node.
+
+You can turn ANY node into a timed challenge by:
+
+- Setting `type = "timer"`
+- Putting the challenge text in the **Body**
+- Adding a **Next Node** that leads to the puzzle or reward
+
+Or…
+
+You can combine it with a puzzle:
+
+- Node 1: Timer (read the clue fast)
+- Node 2: Puzzle (solve the clue)
+
+This is how real escape rooms pace tension.
+
+---
+
+## **2. Global Hunt Timer (full‑run countdown)**
+This is what you *thought* you were getting originally — and we’re adding it next.
+
+This timer:
+
+- Starts when the hunt begins
+- Continues across all nodes
+- Never resets
+- Lives in the HUD
+- Sits in the top‑right corner
+- Ends the hunt when it hits zero
+- Creates real urgency
+
+This is the “escape room clock,” the “race clock,” the “speedrun timer.”
+
+And yes — we’ll put it in the **top‑right corner**, matching your Node Timer placement.
+
+---
+
+# ⭐ What challenges can the Node Timer create?
+
+Here are **high‑pressure, high‑fun** mechanics you can build with the Node Timer:
+
+---
+
+## **1. “Read Fast” Clue Nodes**
+Players must read a short paragraph and extract:
+
+- a hidden word  
+- a number  
+- a symbol  
+- a phrase  
+- a location  
+- a riddle answer  
+
+before the timer expires.
+
+---
+
+## **2. “Spot the Difference” (text version)**
+Show two paragraphs with subtle differences.
+
+Players must identify:
+
+- the missing word  
+- the changed phrase  
+- the incorrect detail  
+
+before time runs out.
+
+---
+
+## **3. “Flash Memory” Nodes**
+Show a list of:
+
+- numbers  
+- symbols  
+- colors  
+- directions  
+- names  
+
+for 5–10 seconds.
+
+Then auto‑advance to a puzzle node where they must recall them.
+
+---
+
+## **4. “Timed Story Reveal”**
+A dramatic story node that:
+
+- reveals lore  
+- builds tension  
+- sets up a twist  
+
+and then auto‑advances.
+
+Perfect for pacing.
+
+---
+
+## **5. “Trap Rooms”**
+Classic escape room mechanic:
+
+- Timer starts  
+- Player must wait  
+- Or find a hidden skip button  
+- Or solve a micro‑puzzle in the text  
+
+You can hide clues in the body text.
+
+---
+
+## **6. “Timed Portal Decision”**
+Combine with portals:
+
+- Node Timer starts  
+- Player must choose a portal before time runs out  
+- If timer hits zero → default portal triggers  
+
+This creates **panic decisions**.
+
+---
+
+## **7. “Timed Key Reveal”**
+Timer counts down → at zero:
+
+- A key is added to inventory  
+- A clue is revealed  
+- A portal unlocks  
+
+This is great for story pacing.
+
+---
+
+## **8. “Timed Failure”**
+If timer hits zero:
+
+- Player is sent to a penalty node  
+- Or loses a metaphysics stat  
+- Or loses a key  
+- Or gets a “fog penalty”  
+
+This ties beautifully into your metaphysics system.
+
+---
+
+# ⭐ What we add next: **Global Hunt Timer**
+
+Here’s what I’ll implement for you:
+
+### **Admin Side**
+- Add “Global Hunt Timer (seconds)” to Hunt Settings
+- Save it in `hunt.metadata.globalTimerSeconds`
+
+### **Player Side**
+- Add a top‑right global countdown HUD element
+- Start it when the hunt begins
+- Continue it across all nodes
+- Stop it only when the hunt ends
+- If it hits zero → trigger a “Hunt Failed” screen
+
+### **Game Loop**
+- Integrate global timer into `gameLoop.js`
+- Ensure it doesn’t conflict with Node Timer
+- Ensure metaphysics still works
+- Ensure puzzles still work
+- Ensure portals still work
+
+### **HUD**
+- Add a clean, minimal timer display
+- Styled using node UI theme (textColor, accentColor)
+
+---
+
+# ⭐ Your next step
+
+Before I generate the Global Timer upgrade, I need one small thing:
+
+### **Where should the Global Timer appear relative to the Node Timer?**
+
+Choose:
+
+### **A — Global Timer above Node Timer (stacked)**  
+```
+⏱ GLOBAL: 12:34
+⏱ NODE: 8s
+```
+
+### **B — Global Timer replaces Node Timer while active**  
+(Only one timer visible at a time)
+
+### **C — Global Timer left, Node Timer right**  
+```
+GLOBAL: 12:34        NODE: 8s
+```
+
+### **D — You choose the cleanest layout**
+
+Pick one, and I’ll build the full Global Timer system cleanly and safely.
+
+⭐ GLOBAL TIMER (left) + NODE TIMER (right)
+Both in the top‑right corner, but side‑by‑side, not stacked, not overlapping, not competing.
+
+Why this is the cleanest:
+It keeps both timers visible at all times
+
+It avoids stacking (your requirement)
+
+It avoids clutter
+
+It mirrors real escape‑room UI patterns
+
+It keeps the player’s eyes in one place
+
+It doesn’t interfere with the node content
+
+It works on mobile and desktop
+
+It scales with your future HUD
+
+Visually:
+Code
+⏱ GLOBAL: 12:34      ⏱ NODE: 8s
+Both aligned horizontally, with a small gap.
+
+This is the cleanest, most readable, and most game‑like layout.
+
+⭐ Now — your second question: “What other challenges could we create with the node timer?”
+Here are high‑pressure, high‑fun, escape‑room‑grade mechanics you can build using the Node Timer.
+
+These are not fluff — these are real mechanics used in commercial puzzle hunts.
+
+🔥 1. Timed Micro‑Puzzles (Text‑Only)
+Players must solve a tiny puzzle embedded in the node’s body text:
+
+Hidden acrostic
+
+Hidden acronym
+
+Hidden capital letters
+
+Hidden bold letters
+
+Hidden first letters of each sentence
+
+Hidden number pattern
+
+Hidden riddle
+
+Hidden cipher key
+
+Timer forces fast reading + fast deduction.
+
+🔥 2. Flash Memory Challenge
+Show:
+
+5 symbols
+
+7 numbers
+
+4 colors
+
+6 directions
+
+3 names
+
+Timer counts down → auto‑advance → puzzle node asks them to recall.
+
+This is a memory pressure mechanic.
+
+🔥 3. Timed Portal Decision
+Node Timer + Portal Node = panic choice.
+
+Example:
+
+Timer starts at 10 seconds
+
+Player must choose a portal before time runs out
+
+If timer hits zero → default portal triggers (trap, penalty, or alternate path)
+
+This creates branching tension.
+
+🔥 4. Timed Lore Reveal
+Use the timer to force pacing:
+
+Show a dramatic story
+
+Timer counts down
+
+Auto‑advance to next scene
+
+Perfect for cinematic pacing
+
+This is how AAA games control emotional beats.
+
+🔥 5. Timed Trap Rooms
+Classic escape‑room mechanic:
+
+Timer starts
+
+Player must find a hidden skip button
+
+Or solve a micro‑puzzle
+
+Or wait out the timer
+
+Or lose a metaphysics stat
+
+This ties beautifully into your metaphysics system.
+
+🔥 6. Timed Key Drops
+Timer hits zero → reward:
+
+A key
+
+A clue
+
+A password
+
+A portal unlock
+
+A metaphysics boost
+
+This is a positive timer, not a penalty.
+
+🔥 7. Timed Failures
+If timer hits zero:
+
+Player is sent to a penalty node
+
+Player loses a metaphysics stat
+
+Player loses a key
+
+Player gets a “fog penalty”
+
+Player is forced onto a harder branch
+
+This adds stakes.
+
+🔥 8. Timed “Find the Phrase” Challenges
+You already mentioned this — and it’s perfect.
+
+Examples:
+
+“Find the hidden word in this paragraph before time runs out.”
+
+“Find the secret phrase in the story.”
+
+“Find the number hidden in the text.”
+
+“Find the clue embedded in the lore.”
+
+This is a reading‑comprehension under pressure mechanic.
+
+⭐ Next Step: I will now build the Global Hunt Timer
+And I will place it:
+
+✔ Top‑right
+✔ Left of the Node Timer
+✔ Horizontally aligned
+✔ Clean, minimal, professional
+✔ Always visible
+✔ Works across all nodes
+✔ Ends the hunt when it hits zero
+Before I generate the code, I need one final detail:
+
+❓ How should the hunt end when the global timer hits zero?
+Choose:
+
+A — “Hunt Failed” screen (simple)
+Black screen, big text: “Time’s Up.”
+
+B — Redirect to a specific node
+You choose the node ID (e.g., node_fail).
+
+C — Show a cinematic (if you have one)
+Uses your existing cinematic system.
+
+D — You choose the cleanest option
+I’ll pick the safest, most elegant default.
+
+Tell me which one, and I’ll deliver the full Global Timer upgrade.Mike — perfect.
+You chose D (I choose the cleanest layout) AND you said “DO NOT STACK.”
+
+So here’s the cleanest, most professional, commercial‑grade layout that satisfies all constraints:
+
+⭐ GLOBAL TIMER (left) + NODE TIMER (right)
+Both in the top‑right corner, but side‑by‑side, not stacked, not overlapping, not competing.
+
+Why this is the cleanest:
+It keeps both timers visible at all times
+
+It avoids stacking (your requirement)
+
+It avoids clutter
+
+It mirrors real escape‑room UI patterns
+
+It keeps the player’s eyes in one place
+
+It doesn’t interfere with the node content
+
+It works on mobile and desktop
+
+It scales with your future HUD
+
+Visually:
+Code
+⏱ GLOBAL: 12:34      ⏱ NODE: 8s
+Both aligned horizontally, with a small gap.
+
+This is the cleanest, most readable, and most game‑like layout.
+
+⭐ Now — your second question: “What other challenges could we create with the node timer?”
+Here are high‑pressure, high‑fun, escape‑room‑grade mechanics you can build using the Node Timer.
+
+These are not fluff — these are real mechanics used in commercial puzzle hunts.
+
+🔥 1. Timed Micro‑Puzzles (Text‑Only)
+Players must solve a tiny puzzle embedded in the node’s body text:
+
+Hidden acrostic
+
+Hidden acronym
+
+Hidden capital letters
+
+Hidden bold letters
+
+Hidden first letters of each sentence
+
+Hidden number pattern
+
+Hidden riddle
+
+Hidden cipher key
+
+Timer forces fast reading + fast deduction.
+
+🔥 2. Flash Memory Challenge
+Show:
+
+5 symbols
+
+7 numbers
+
+4 colors
+
+6 directions
+
+3 names
+
+Timer counts down → auto‑advance → puzzle node asks them to recall.
+
+This is a memory pressure mechanic.
+
+🔥 3. Timed Portal Decision
+Node Timer + Portal Node = panic choice.
+
+Example:
+
+Timer starts at 10 seconds
+
+Player must choose a portal before time runs out
+
+If timer hits zero → default portal triggers (trap, penalty, or alternate path)
+
+This creates branching tension.
+
+🔥 4. Timed Lore Reveal
+Use the timer to force pacing:
+
+Show a dramatic story
+
+Timer counts down
+
+Auto‑advance to next scene
+
+Perfect for cinematic pacing
+
+This is how AAA games control emotional beats.
+
+🔥 5. Timed Trap Rooms
+Classic escape‑room mechanic:
+
+Timer starts
+
+Player must find a hidden skip button
+
+Or solve a micro‑puzzle
+
+Or wait out the timer
+
+Or lose a metaphysics stat
+
+This ties beautifully into your metaphysics system.
+
+🔥 6. Timed Key Drops
+Timer hits zero → reward:
+
+A key
+
+A clue
+
+A password
+
+A portal unlock
+
+A metaphysics boost
+
+This is a positive timer, not a penalty.
+
+🔥 7. Timed Failures
+If timer hits zero:
+
+Player is sent to a penalty node
+
+Player loses a metaphysics stat
+
+Player loses a key
+
+Player gets a “fog penalty”
+
+Player is forced onto a harder branch
+
+This adds stakes.
+
+🔥 8. Timed “Find the Phrase” Challenges
+You already mentioned this — and it’s perfect.
+
+Examples:
+
+“Find the hidden word in this paragraph before time runs out.”
+
+“Find the secret phrase in the story.”
+
+“Find the number hidden in the text.”
+
+“Find the clue embedded in the lore.”
+
+This is a reading‑comprehension under pressure mechanic.
+
+⭐ Next Step: I will now build the Global Hunt Timer
+And I will place it:
+
+✔ Top‑right
+✔ Left of the Node Timer
+✔ Horizontally aligned
+✔ Clean, minimal, professional
+✔ Always visible
+✔ Works across all nodes
+✔ Ends the hunt when it hits zero
+Before I generate the code, I need one final detail:
+
+❓ How should the hunt end when the global timer hits zero?
+Choose:
+
+A — “Hunt Failed” screen (simple)
+Black screen, big text: “Time’s Up.”
+
+B — Redirect to a specific node
+You choose the node ID (e.g., node_fail).
+
+C — Show a cinematic (if you have one)
+Uses your existing cinematic system.
+
+D — You choose the cleanest option
+I’ll pick the safest, most elegant default.
+
+Tell me which one, and I’ll deliver the full Global Timer upgrade.
