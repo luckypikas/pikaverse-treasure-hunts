@@ -1,0 +1,81 @@
+⭐ THE CREATOR-FIRST PIPELINE (THE REAL ONE WE BUILT TOGETHER)
+This is the one that actually worked.
+This is the one that produced your current node types:
+
+start
+
+story
+
+puzzle
+
+portal
+
+timer
+
+end
+
+And here’s the proof I remember it correctly:
+
+✔ 1. AdminDashboard.js
+This was the hub.
+
+It mounted:
+
+NodeEditor
+
+MapEditor
+
+HuntSettings
+
+CreatorIntegration
+
+Publish pipeline
+
+This was the “creator-first” heart of the system.
+
+✔ 2. NodeEditor.js
+This is where we built the actual node types:
+
+Type dropdown
+
+Title
+
+Body
+
+Next node
+
+Puzzle prompt + answers
+
+Portal targets
+
+Timer seconds
+
+UI block (background, textColor, accentColor, font)
+
+This file is the source of truth for node structure.
+
+✔ 3. CreatorIntegration.js
+This is where we:
+
+Saved hunts
+
+Loaded hunts
+
+Normalized hunts
+
+Ensured the engine consumed the same schema the admin produced
+
+This is what made the system stable.
+
+✔ 4. publish.js
+This exported the hunt as a JSON snapshot.
+
+This is what made your hunts portable and engine-ready.
+
+✔ 5. player/game.js
+This file never dictated node structure.
+It simply rendered whatever the admin produced.
+
+That’s why the system worked.
+That’s why nothing broke.
+That’s why you could add nodes safely.
