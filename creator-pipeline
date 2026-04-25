@@ -79,3 +79,85 @@ It simply rendered whatever the admin produced.
 That’s why the system worked.
 That’s why nothing broke.
 That’s why you could add nodes safely.
+
+Absolutely. I’d turn it into a short canonical note that says what is **authoritative**, what is **derived**, and what must stay stable. A single-source-of-truth model plus backward-compatible schema discipline is the right framing for a project like yours. [recordlinker](https://recordlinker.com/canonical-data-model/)
+
+## Pikaverse Architecture Note
+
+### Core principle
+
+Pikaverse is a **creator-first, schema-driven treasure hunt platform**. The admin pipeline is the source of truth for node structure, while the player engine is a renderer and executor of that schema. [strapi](https://strapi.io/blog/what-is-single-source-of-truth)
+
+### Authority model
+
+- **AdminDashboard / NodeEditor** define and edit node shape.
+- **CreatorIntegration** normalizes, validates, saves, and loads hunts.
+- **publish.js** exports a portable hunt snapshot.
+- **player/game.js** consumes the published schema and renders it safely. [cgi](https://www.cgi.com/sites/default/files/2021-12/canonical-data-model-whitepaper-2021-en.pdf)
+
+### Canonical node schema
+
+The expected canonical node shape is:
+
+- `id`
+- `type`
+- `title`
+- `body`
+- `nextNodeId`
+- `ui.backgroundImage`
+- `ui.textColor`
+- `ui.accentColor`
+- `ui.fontFamily`
+- `puzzle.prompt`
+- `puzzle.answers`
+- `portalTargets`
+- `timerSeconds` [docs.confluent](https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html)
+
+### Stability rules
+
+- The engine must accept legacy hunts safely.
+- New fields must be backward compatible.
+- Optional fields should have safe defaults.
+- Invalid or incomplete data should be normalized, warned about, or safely ignored rather than crashing the runtime. [dataexpert](https://www.dataexpert.io/blog/backward-compatibility-schema-evolution-guide)
+
+### Rendering rule
+
+`player/game.js` must not invent schema. It should render by node type and remain additive:
+- `story` or default nodes show narrative and a continue action.
+- `puzzle` nodes show prompt, input, and answer validation.
+- `portal` nodes show destination buttons.
+- `timer` nodes show a countdown and advance when complete. [branchboston](https://branchboston.com/schema-evolution-strategies-handling-data-structure-changes-without-breaking-pipelines/)
+
+### Change policy
+
+- Schema changes happen in the creator pipeline first.
+- The player engine should be updated only after the admin can safely write the new shape.
+- Breaking changes require explicit versioning or migration, not silent drift. [oreilly](https://www.oreilly.com/library/view/feature-flag-best/9781492050452/ch06.html)
+
+### Working rule for new features
+
+New features must be:
+- additive,
+- isolated,
+- type-based,
+- backward compatible,
+- and non-blocking to existing rendering. [planetscale](https://planetscale.com/blog/backward-compatible-databases-changes)
+
+## Operational flow
+
+1. Creator edits a node in Admin.
+2. CreatorIntegration normalizes the hunt.
+3. publish.js exports the hunt snapshot.
+4. Player loads the snapshot.
+5. game.js renders according to node type without redefining structure. [perplexity](https://www.perplexity.ai/search/5f24bd85-a888-41f6-83c8-b0a8dffdedc9)
+
+## Decision rule
+
+If a feature changes what a node **is**, it belongs in the admin pipeline first.  
+If a feature changes only how a node is **displayed or executed**, it can be added to the player second. [dataexpert](https://www.dataexpert.io/blog/backward-compatibility-schema-evolution-guide)
+
+## Project posture
+
+Pikaverse is currently in a **stable creator-first phase**. The goal is to preserve runtime stability while expanding node types and creator tools in a controlled, backward-compatible way. [strapi](https://strapi.io/blog/what-is-single-source-of-truth)
+
+If you want, I can next turn this into a **clean Markdown README-style architecture doc** you can paste directly into your repo.
