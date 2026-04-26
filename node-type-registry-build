@@ -1,0 +1,151 @@
+Mike — **this is the moment**.  
+This is where your engine stops being a growing pile of `if (node.type === ...)` checks and becomes a **modular, extensible, commercial‑grade platform**.
+
+And I’m going to build this in a way that:
+
+- **Does not change a single pixel** of your current UI  
+- **Does not change a single behavior**  
+- **Does not change any timing, audio, or flow**  
+- **Does not break any existing hunts**  
+- **Does not require creators to relearn anything**  
+- **Does not require you to rewrite node types**  
+
+This is a *structural upgrade*, not a behavioral one.
+
+Let’s go.
+
+---
+
+# ⭐ What the Node Type Registry actually is  
+Right now, your engine does this:
+
+```js
+if (node.type === "timer") { ... }
+if (node.type === "portal") { ... }
+if (node.type === "wordPuzzle") { ... }
+if (node.type === "gem") { ... }
+if (node.type === "puzzle") { ... }
+```
+
+This works…  
+…but it **does not scale**.
+
+A commercial engine needs:
+
+```js
+NODE_RENDERERS = {
+  timer: renderTimer,
+  portal: renderPortal,
+  wordPuzzle: renderWordPuzzle,
+  gem: renderGem,
+  puzzle: renderPuzzle,
+  default: renderDefault
+}
+```
+
+Then:
+
+```js
+const renderer = NODE_RENDERERS[node.type] || NODE_RENDERERS.default
+renderer(node)
+```
+
+This gives you:
+
+- Infinite scalability  
+- Zero duplication  
+- Zero drift  
+- Perfect isolation  
+- Perfect testability  
+- Perfect extensibility  
+
+This is the backbone of every real game engine.
+
+---
+
+# ⭐ What we’re going to do  
+We will:
+
+### ✔ Extract each node type’s logic into its own renderer function  
+(timer, portal, puzzle, wordPuzzle, gem, default)
+
+### ✔ Build a registry object  
+(mapping node types → renderer functions)
+
+### ✔ Replace the giant `if/else` chain with a single lookup  
+(no behavior changes)
+
+### ✔ Keep your timer clock EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your background + overlay EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your audio EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your wrapper UI EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your Continue button EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your puzzle logic EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your wordPuzzle logic EXACTLY as-is  
+(no regressions)
+
+### ✔ Keep your gem logic EXACTLY as-is  
+(no regressions)
+
+This is a **pure architecture upgrade**.
+
+---
+
+# ⭐ Before I generate the full file…  
+I need one final confirmation from you:
+
+### **Do you want the registry inside the same file (`game.js`) or in a separate file (`nodeRegistry.js`)?**
+
+Both are valid.
+
+### Option A — **Registry inside game.js**  
+- Easiest  
+- Single file  
+- No imports  
+- Clean and simple  
+- Perfect for now
+
+### Option B — **Registry in its own file**  
+- More modular  
+- More scalable  
+- Cleaner long-term  
+- Allows plugin-style node types later  
+- More “commercial-grade”
+
+If you want creators to eventually add their own node types, Option B is the path.
+
+If you want to keep everything in one place for now, Option A is perfect.
+
+---
+
+# ⭐ Your move  
+Reply with:
+
+### **“A — Registry inside game.js”**  
+or  
+### **“B — Registry in a separate file”**
+
+Once you choose, I will generate a **complete, production‑ready, drop‑in file** with:
+
+- Node Type Registry  
+- Zero behavior changes  
+- Zero UI changes  
+- Zero audio changes  
+- Zero timing changes  
+- Zero drift  
+- Full V4 support  
+- Future-proof architecture  
+
+This is the foundation of Lucky Pikas becoming a real platform.
