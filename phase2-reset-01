@@ -1,0 +1,490 @@
+Good call. Resetting to a known-good baseline is exactly how you prevent “invisible drift” from killing a system like this.
+
+I’m going to give you the **clean, product-grade roadmap from your 4/28 stable state → V4 unified system**, without mixing in the noise that crept in.
+
+---
+
+# 🧭 WHERE YOU ACTUALLY ARE (POST-RESET)
+
+You have a **working system with 3 major surfaces**:
+
+### 1. 🛠 Admin (Creator Side)
+
+* `adminDashboard.js`
+* `NodeEditor`
+* `MapEditor`
+* `ItemEditor`
+* Uses: `CreatorIntegration`
+
+### 2. 🎮 Player (Runtime)
+
+* `game.js` (your engine — already strong)
+* Node registry system ✅
+* Inventory system ✅
+* Score system (logic only) ✅
+
+### 3. 🧩 Data Layer (CURRENTLY FRAGMENTED)
+
+* `pikaverse_hunts_v4` (storage)
+* `pikaverse_hunt` (play test)
+* `pikaverse_hunt_id` (hub)
+* (maybe) `pikaverse_test_hunt` (legacy)
+
+👉 **THIS is the real problem area.**
+
+---
+
+# 🎯 YOUR CORE OBJECTIVE (V4)
+
+> **Unify how hunts are stored, loaded, and executed — without breaking Admin or Game.**
+
+Everything else is secondary.
+
+---
+
+# 🧱 THE SYSTEM YOU ARE BUILDING (CLEARLY)
+
+You are building:
+
+### ⭐ “Treasure Hunt Platform Engine”
+
+A system with:
+
+* Creator → builds hunts
+* Player → plays hunts
+* Engine → executes nodes
+* Adapter → normalizes data
+* Storage → persists hunts
+
+---
+
+# ✅ WHAT YOU ALREADY GOT RIGHT
+
+These are **solid and should NOT be touched right now**:
+
+### ✔ game.js
+
+* Modular node system (registry) ✅
+* Inventory system ✅
+* State system (L1) ✅
+* Gating system (L3) ✅
+* Timer system ✅
+* Result system ✅
+
+👉 This is **production-quality foundation code**
+
+---
+
+### ✔ AdminDashboard
+
+* Hunt CRUD ✅
+* Node editing ✅
+* Item editing ✅
+* Play Test trigger ✅
+
+👉 Also solid
+
+---
+
+# 🚨 WHAT IS BROKEN (THE REAL ISSUE)
+
+### ❌ Multiple loading systems
+
+You currently have:
+
+| Path                | Purpose   | Problem            |
+| ------------------- | --------- | ------------------ |
+| `pikaverse_hunt`    | Play Test | works but isolated |
+| `pikaverse_hunt_id` | Hub       | separate path      |
+| `loadActiveHunt()`  | Adapter   | incomplete         |
+| fallback hunt       | default   | masking bugs       |
+
+👉 These are **not unified**
+
+---
+
+# 🧠 THE CORRECT ARCHITECTURE (V4 TARGET)
+
+You need ONE pipeline:
+
+```
+STORAGE → ADAPTER → GAME ENGINE
+```
+
+---
+
+# 🔥 REQUIRED COMPONENTS (V4)
+
+## 1. ✅ `huntAdapter.js` (CRITICAL)
+
+This is your **translation layer**
+
+### Responsibilities:
+
+* Load hunt from ANY source
+* Normalize schema
+* Return clean “ActiveHunt”
+
+### It should handle:
+
+1. Admin Play Test
+2. Hub selection
+3. Direct URL
+4. Stored hunts
+5. Fallback (optional)
+
+---
+
+## 2. ✅ Unified Loader Function
+
+You need ONE entry point:
+
+```js
+resolveActiveHunt()
+```
+
+NOT:
+
+* `loadActiveHunt(huntId)` alone
+* NOT scattered logic in `game.js`
+
+---
+
+## 3. ✅ Schema v1 (LOCK THIS)
+
+You already started this — good.
+
+```js
+{
+  id,
+  title,
+  description,
+  metadata,
+  nodes,
+  items,
+  isPublic,
+  accessCode,
+  version
+}
+```
+
+👉 This becomes your **contract**
+
+---
+
+## 4. ✅ Normalization Layer
+
+You already partially do this in `game.js`:
+
+```js
+normalizeNode()
+```
+
+You ALSO need:
+
+```js
+normalizeHunt()
+normalizeItems()
+```
+
+---
+
+## 5. ✅ Storage Contract
+
+Pick ONE:
+
+```js
+pikaverse_hunts_v4
+```
+
+Structure:
+
+```js
+{
+  [huntId]: huntObject
+}
+```
+
+---
+
+# 🔁 FULL PLAYER LOOP (YOU CALLED THIS OUT — YES)
+
+You are correct:
+
+### You are missing:
+
+## 👉 “Back to Hunt List”
+
+From:
+
+### `renderResultScreen()`
+
+Add:
+
+```js
+window.location.href = "../index.html"
+```
+
+---
+
+### FULL LOOP SHOULD BE:
+
+```
+index.html (hunt list)
+   ↓
+game.html?huntId=...
+   ↓
+play game
+   ↓
+Hunt Complete
+   ↓
+Back to index.html
+```
+
+---
+
+# 🧩 WHAT YOU’RE MISSING (IMPORTANT)
+
+## 1. ❗ Entry Resolver (BIG ONE)
+
+Right now:
+
+```js
+game.js = too smart
+huntAdapter = too dumb
+```
+
+👉 Flip that.
+
+---
+
+## 2. ❗ Versioning Strategy
+
+You added:
+
+```js
+version: "1.0"
+```
+
+Good — but you need:
+
+### Rule:
+
+* NEVER break old hunts
+* ALWAYS migrate forward
+
+---
+
+## 3. ❗ Migration Layer
+
+Example:
+
+```js
+mapV4HuntToSchema()
+```
+
+👉 Keep this. Expand later.
+
+---
+
+## 4. ❗ Data Validation (SOFT, NOT STRICT)
+
+You want:
+
+* No crashes
+* No hard failures
+
+NOT:
+
+* strict schema enforcement (yet)
+
+---
+
+## 5. ❗ Error Visibility
+
+Right now:
+
+```js
+console.warn(...)
+```
+
+Later:
+
+* Debug overlay (optional)
+
+---
+
+## 6. ❗ Remove Legacy Keys (Eventually)
+
+These must go later:
+
+* `pikaverse_test_hunt`
+* duplicate loaders
+* hidden fallbacks
+
+---
+
+# ⚠️ WARNINGS (READ THIS CAREFULLY)
+
+## 🚨 1. DO NOT TOUCH game.js LOGIC
+
+Only:
+
+* move loading OUT
+* not rewrite engine
+
+---
+
+## 🚨 2. DO NOT CHANGE NODE SHAPES
+
+This will break:
+
+* NodeEditor
+* MapEditor
+* existing hunts
+
+---
+
+## 🚨 3. DO NOT CHANGE CreatorIntegration API
+
+Admin depends on it:
+
+```js
+CreatorIntegration.*
+```
+
+---
+
+## 🚨 4. DO NOT MIX STORAGE FORMATS
+
+Pick ONE:
+
+```js
+pikaverse_hunts_v4
+```
+
+---
+
+## 🚨 5. AVOID “SMART FALLBACKS”
+
+This caused your bug.
+
+Bad:
+
+```js
+if (!hunt) loadDefault()
+```
+
+Good:
+
+```js
+if (!hunt) return null
+```
+
+---
+
+## 🚨 6. WATCH LOCALSTORAGE COLLISIONS
+
+Same keys used in:
+
+* admin
+* game
+* hub
+
+👉 Namespace carefully
+
+---
+
+## 🚨 7. PLAY TEST MUST OVERRIDE EVERYTHING
+
+This is critical:
+
+```js
+pikaverse_hunt → highest priority
+```
+
+---
+
+# 🧱 CLEAN V4 BUILD ORDER (DO THIS EXACTLY)
+
+## STEP 1 — Create / Fix `huntAdapter.js`
+
+* central loader
+* normalization
+* no UI logic
+
+---
+
+## STEP 2 — Simplify `game.js`
+
+Replace all loading logic with:
+
+```js
+const hunt = resolveActiveHunt()
+```
+
+---
+
+## STEP 3 — Keep Admin UNCHANGED
+
+* it already works
+* don’t touch it
+
+---
+
+## STEP 4 — Add “Back to Hunt List” button
+
+in result screen
+
+---
+
+## STEP 5 — Verify ALL PATHS
+
+Test:
+
+1. Play Test (Admin)
+2. Hub → huntId
+3. Direct URL
+4. No hunt (should fail cleanly)
+
+---
+
+## STEP 6 — Remove dead paths later
+
+NOT NOW
+
+---
+
+# 🧠 FINAL TRUTH (IMPORTANT)
+
+You don’t have a broken engine.
+
+You have:
+
+> ❗ **a fragmented loading system**
+
+---
+
+# 🚀 WHAT YOU SHOULD DO NEXT (NO HESITATION)
+
+👉 Step 1:
+Show me your:
+
+```
+player/huntAdapter.js
+```
+
+---
+
+Then I will:
+
+* unify it
+* make it production-safe
+* plug it cleanly into your system
+* NO regressions
+* NO admin breakage
+
+---
+
+You’re actually very close to a **commercial-grade platform** now.
+This reset was the right move.
