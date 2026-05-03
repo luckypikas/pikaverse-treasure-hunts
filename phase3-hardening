@@ -1016,15 +1016,745 @@ If you’re ready, say:
 
 And I’ll generate the full interface spec, lifecycle, and integration plan.
 
+Perfect. Let’s wire the behavior layer onto the contract you just shaped.
 
+---
 
+### 1. Core NodeType interface
 
+This is the **runtime-facing contract** every node type must implement, backed by the Type Contract Layer:
 
+```ts
+export interface NodeType {
+  /** Structural + typeData validation (pure, no side effects) */
+  validate(node: NodeV5, hunt: HuntV5): {
+    errors: string[];
+    warnings: string[];
+  };
 
+  /** Normalization into a safe, fully-populated node */
+  normalize(node: NodeV5, hunt: HuntV5): NodeV5;
 
+  /** Called when the node becomes active */
+  onEnter(node: NodeV5, ctx: NodeContext): void | Promise<void>;
 
+  /** Called when the node is about to be left */
+  onExit(node: NodeV5, ctx: NodeContext): void | Promise<void>;
 
+  /** Pure render description (no direct DOM) */
+  render(node: NodeV5, ctx: NodeContext): RenderModel;
 
+  /** What this node depends on (items, assets, state keys, etc.) */
+  getDependencies(node: NodeV5): NodeDependencies;
+
+  /** Non-fatal issues that creators should know about */
+  getWarnings(node: NodeV5, hunt: HuntV5): string[];
+}
+```
+
+Where:
+
+```ts
+export interface NodeContext {
+  state: GameState;          // key/value store
+  inventory: InventoryState; // items
+  time: TimeApi;             // timers
+  nav: NavApi;               // goToNode, endHunt, etc.
+  audio: AudioApi;           // sfx, music
+  ui: UiApi;                 // overlays, toasts, modals
+  log: LogApi;               // debug / analytics
+}
+```
+
+`RenderModel` is a **pure description** (e.g. `{ type: 'story', title, body, choices }`) that the runtime renderer turns into actual DOM/UI.
+
+---
+
+### 2. Node registry integration
+
+The registry becomes the single map from `type` → `NodeType`:
+
+```ts
+const nodeRegistry: Record<string, NodeType> = {
+  story: storyNodeType,
+  puzzle: puzzleNodeType,
+  wordPuzzle: wordPuzzleNodeType,
+  gem: gemNodeType,
+  // future: spinTheWheel, etc.
+};
+```
+
+Runtime flow:
+
+1. Loader gets a `NodeV5`.
+2. Looks up `nodeRegistry[node.type]`.
+3. Runs `normalize` (once per hunt load or lazily).
+4. On navigation:
+   - `onExit` of previous node
+   - `onEnter` of next node
+5. For UI:
+   - `render` → `RenderModel` → shared renderer.
+
+---
+
+### 3. Relationship to Type Contract Layer (TCL)
+
+For each type, the NodeType implementation is **backed by its contract**:
+
+- `validate` uses the type’s structural + typeData schema.
+- `normalize` uses the type’s defaults + normalization rules.
+- `getDependencies` uses the type’s declared fields (e.g. `rewards.items`, `gating.requiresItems`, `ui.background`).
+- `render` is guaranteed to receive a normalized node.
+
+So the layering is:
+
+- **V5 Schema** → defines shape.
+- **Type Contract Layer** → defines per-type rules.
+- **NodeType Interface** → defines per-type behavior.
+
+No guessing, no drift.
+
+---
+
+### 4. Lifecycle guarantees
+
+For every node transition, the runtime guarantees:
+
+1. Node has been **normalized**.
+2. Gating has already been evaluated (or is part of `onEnter`, depending on your final design).
+3. Timer hooks are wired via `ctx.time`.
+4. Inventory changes happen via `ctx.inventory` (not ad hoc).
+5. State changes happen via `ctx.state`.
+
+This keeps behavior consistent across all node types.
+
+---
+
+### 5. Minimal initial implementation plan
+
+To keep Phase 3 disciplined:
+
+1. **Define shared types**: `NodeV5`, `HuntV5`, `ItemV5`, `NodeContext`, `RenderModel`.
+2. **Implement NodeType interface** (as above).
+3. **Wrap existing node logic** (`story`, `puzzle`, `wordPuzzle`, `gem`) into NodeType objects.
+4. **Refactor runtime** to:
+   - Use `nodeRegistry[type]`
+   - Call `normalize` at load
+   - Use `render` → `RenderModel` → existing UI
+5. Keep behavior identical—this is a **structural refactor**, not a feature change.
+
+---
+
+If you want, next step I can:
+
+- Draft the **exact `RenderModel` shape** for current node types, or  
+- Sketch the **refactor plan for game.js** to adopt this NodeType interface without breaking anything.
+
+These are the only things I would flag before you fully commit:
+
+1. ⚠️ You are slightly over-specifying too early in 2 places
+Specifically:
+NodeContext
+RenderModel
+
+These are powerful — but currently:
+
+they assume you already know all future systems
+
+Risk:
+
+You may accidentally “lock in” assumptions about:
+
+inventory complexity (Inventory C evolution)
+UI system structure (future overlays, animations, transitions)
+navigation system expansion (branching, async nodes, multiplayer later)
+Fix (important but subtle):
+
+Keep them minimal and extensible, not complete.
+
+You want:
+
+“enough structure to refactor safely later”
+
+not:
+
+“final form engine API”
+
+2. ⚠️ render() returning a single model may become limiting
+
+Right now:
+
+render(node, ctx): RenderModel
+Good now — but future tension:
+
+You will eventually want:
+
+multi-layer UI (HUD + modal + overlays)
+animated transitions
+async render states (loading puzzles, fetched content, etc.)
+Risk:
+
+A single RenderModel may become too flat.
+
+Fix (light adjustment, not redesign):
+
+Allow:
+
+RenderModel | RenderModel[]
+
+or:
+
+{
+  main: RenderModel,
+  overlays?: RenderModel[],
+  effects?: RenderEffect[]
+}
+
+This keeps future expansion open.
+
+3. ⚠️ onEnter / onExit can become “logic dumping ground”
+
+This is the biggest real architectural risk.
+
+Why:
+
+Once devs (you in 2 weeks 😄) start adding:
+
+inventory logic
+state mutations
+navigation decisions
+timers
+side effects
+
+…onEnter becomes a god object.
+
+Fix (very important discipline rule):
+
+Define this constraint now:
+
+onEnter and onExit MUST NOT contain game logic decisions — only side effects.
+
+Logic decisions belong in:
+
+gating system
+node transition resolver
+or explicit “transition engine”
+4. ⚠️ You still don’t have a “transition resolver layer”
+
+Right now flow is implied:
+
+node A → node B via nextNodeId
+
+But in real systems, transitions become:
+
+conditional
+state-driven
+inventory-driven
+timer-driven
+failure-driven
+Missing piece:
+
+A Node Transition Resolver
+
+This will eventually sit between:
+
+onExit
+onEnter
+
+and decide:
+
+“where do we actually go next?”
+
+Without it, logic will leak into nodes over time.
+
+🧭 So is this okay?
+✔ Yes — structurally correct
+✔ Yes — Phase 3 appropriate
+✔ Yes — scalable foundation
+
+But with one truth:
+
+This is now an engine architecture, not just a game structure.
+
+So discipline matters more than design at this point.
+
+⭐ What you should choose next
+
+Given this design, the correct next step is NOT schema anymore.
+
+You already moved past that layer.
+
+🥇 NEXT STEP: Implement Node Registry + NodeType skeletons (NO behavior yet)
+
+Why this is correct:
+
+You need to:
+
+ground this interface in real code
+map existing nodes to NodeTypes
+test normalize → render → transition flow
+validate the architecture before expanding
+What NOT to do yet
+
+❌ Don’t build full admin validation
+❌ Don’t expand node types
+❌ Don’t add new features
+
+What you SHOULD do next
+
+✔ Build storyNodeType, puzzleNodeType, etc. (minimal versions)
+✔ Hook into registry
+✔ Make runtime call path real
+✔ Confirm lifecycle works end-to-end
+
+🧠 Why this is the correct sequencing
+
+You are now at this stage:
+
+Phase 3 hierarchy (correct order)
+Schema (DONE ✔)
+Behavior contract (DONE ✔)
+Execution wiring (NEXT)
+Validation systems
+Tooling / admin enforcement
+Expansion (new node types, features)
+🚀 Final advice (important)
+
+You are currently in the dangerous but powerful zone:
+
+“The architecture is good enough that you could overbuild it in any direction”
+
+So the key risk now is not correctness — it’s scope expansion too early.
+
+⭐ My recommendation (clear answer)
+👉 Next step:
+
+Build the Node Registry + minimal NodeType implementations
+
+Keep them dumb on purpose:
+
+no fancy logic
+just pass-through behavior
+just validate → normalize → render flow
+
+Mike…  
+This is exactly the right read of the architecture. You’re not just “building features” anymore — you’re steering an engine. And engines only survive if sequencing is disciplined.
+
+So let’s lock in the next move exactly as you outlined:
+
+# ⭐ **NEXT STEP: Build the Node Registry + Minimal NodeType Skeletons**  
+*(No behavior. No logic. No features. Just the structural wiring.)*
+
+This is the safest, smartest, most future‑proof move you can make right now.
+
+You’re doing three things at once:
+
+1. **Proving the architecture works in real code**  
+2. **Avoiding premature commitment to UI, inventory, or transitions**  
+3. **Creating the foundation for validation, safety, and expansion**
+
+This is the correct Phase 3 sequencing.
+
+---
+
+# 🧠 Before I generate the skeletons, here’s the refined architecture (based on your flags)
+
+You were absolutely right to call out:
+
+- **NodeContext** must stay minimal  
+- **RenderModel** must stay flexible  
+- **onEnter/onExit** must NOT become logic dumping grounds  
+- **Transition Resolver** must exist (but not yet implemented)
+
+So here is the refined, Phase‑3‑safe version.
+
+---
+
+# ⭐ **1. Minimal NodeContext (Phase‑3‑safe)**
+
+Only the things the runtime already has today — nothing future‑locking:
+
+```ts
+export interface NodeContext {
+  state: GameState;          // key/value store
+  inventory: InventoryState; // items
+  nav: NavApi;               // goToNode, endHunt
+  audio: AudioApi;           // sfx, music
+  log: LogApi;               // debug only
+}
+```
+
+No timers.  
+No UI overlays.  
+No transitions.  
+No async systems.
+
+Those come later — and can be added without breaking the contract.
+
+---
+
+# ⭐ **2. Minimal RenderModel (Phase‑3‑safe)**
+
+You nailed it: don’t over‑specify.
+
+So we define the simplest possible shape:
+
+```ts
+export interface RenderModel {
+  kind: string;              // "story", "puzzle", etc.
+  data: Record<string, any>; // type-specific payload
+}
+```
+
+And allow multi‑layer rendering later:
+
+```ts
+export type RenderOutput =
+  | RenderModel
+  | { main: RenderModel; overlays?: RenderModel[] };
+```
+
+This keeps the door open for:
+
+- HUD  
+- overlays  
+- animations  
+- transitions  
+- async loading  
+
+…without locking anything prematurely.
+
+---
+
+# ⭐ **3. NodeType Skeleton (Phase‑3‑safe)**
+
+This is the minimal interface we implement now:
+
+```ts
+export interface NodeType {
+  validate(node: NodeV5, hunt: HuntV5): ValidationResult;
+  normalize(node: NodeV5, hunt: HuntV5): NodeV5;
+  render(node: NodeV5, ctx: NodeContext): RenderOutput;
+  onEnter(node: NodeV5, ctx: NodeContext): void;
+  onExit(node: NodeV5, ctx: NodeContext): void;
+}
+```
+
+And we enforce your rule:
+
+> **onEnter/onExit MUST NOT contain game logic. Only side effects.**
+
+This prevents future chaos.
+
+---
+
+# ⭐ **4. Node Registry (Phase‑3‑safe)**
+
+```ts
+export const nodeRegistry: Record<string, NodeType> = {
+  story: storyNodeType,
+  puzzle: puzzleNodeType,
+  wordPuzzle: wordPuzzleNodeType,
+  gem: gemNodeType
+};
+```
+
+No behavior yet.  
+Just structure.
+
+---
+
+# ⭐ **5. Minimal NodeType Implementations (Phase‑3‑safe)**
+
+These are intentionally dumb — exactly as you recommended.
+
+### storyNodeType
+
+```ts
+export const storyNodeType: NodeType = {
+  validate: () => ({ errors: [], warnings: [] }),
+  normalize: (node) => node,
+  render: (node) => ({
+    kind: "story",
+    data: {
+      title: node.title,
+      body: node.body,
+      ui: node.ui
+    }
+  }),
+  onEnter: () => {},
+  onExit: () => {}
+};
+```
+
+### puzzleNodeType
+
+```ts
+export const puzzleNodeType: NodeType = {
+  validate: () => ({ errors: [], warnings: [] }),
+  normalize: (node) => node,
+  render: (node) => ({
+    kind: "puzzle",
+    data: node.typeData
+  }),
+  onEnter: () => {},
+  onExit: () => {}
+};
+```
+
+### wordPuzzleNodeType
+
+```ts
+export const wordPuzzleNodeType: NodeType = {
+  validate: () => ({ errors: [], warnings: [] }),
+  normalize: (node) => node,
+  render: (node) => ({
+    kind: "wordPuzzle",
+    data: node.typeData
+  }),
+  onEnter: () => {},
+  onExit: () => {}
+};
+```
+
+### gemNodeType
+
+```ts
+export const gemNodeType: NodeType = {
+  validate: () => ({ errors: [], warnings: [] }),
+  normalize: (node) => node,
+  render: (node) => ({
+    kind: "gem",
+    data: node.typeData
+  }),
+  onEnter: () => {},
+  onExit: () => {}
+};
+```
+
+These are **structural placeholders**, not behavior.
+
+Exactly what Phase 3 requires.
+
+---
+
+# ⭐ **6. Runtime Wiring (Phase‑3‑safe)**
+
+The runtime now does:
+
+```ts
+const type = nodeRegistry[node.type];
+
+type.onExit(prevNode, ctx);
+type.onEnter(nextNode, ctx);
+
+const renderOutput = type.render(nextNode, ctx);
+renderToUI(renderOutput);
+```
+
+No logic.  
+No transitions.  
+No validation.  
+No safety.  
+No new features.
+
+Just the architecture.
+
+---
+
+# ⭐ **You are now ready for the next step**
+
+You’ve completed:
+
+- Schema Contract  
+- Type Contract Layer  
+- NodeType Interface  
+- Minimal NodeType skeletons  
+- Node Registry  
+- Runtime wiring plan  
+
+This is the **exact** point where Phase 3 becomes real.
+
+The next move is yours:
+
+### **Do you want me to generate the actual code for the Node Registry + NodeType skeletons + runtime wiring?**
+
+Or:
+
+### **Do you want to review/adjust the skeletons before we generate code?**
+
+Either path is correct — you choose the pace.
+
+Good, that’s the right instinct—tune the shape before we pour concrete.
+
+Here’s a tight review + the adjustments I’d make **before** we commit to code.
+
+---
+
+### 1. NodeContext — trim to the true minimum
+
+Right now:
+
+```ts
+interface NodeContext {
+  state: GameState;
+  inventory: InventoryState;
+  nav: NavApi;
+  audio: AudioApi;
+  log: LogApi;
+}
+```
+
+**Adjustment:**
+
+Drop anything you’re not already using in `game.js` today.
+
+If, in current runtime:
+
+- `audio` is only called from outside node logic → remove from `NodeContext` for now.
+- `log` is not used → remove for now.
+
+Safer minimal:
+
+```ts
+interface NodeContext {
+  state: GameState;
+  inventory: InventoryState;
+  nav: NavApi;
+}
+```
+
+We can always add `audio` / `log` later without breaking the contract.
+
+---
+
+### 2. RenderModel / RenderOutput — lock the flexible shape
+
+Current idea:
+
+```ts
+interface RenderModel {
+  kind: string;
+  data: Record<string, any>;
+}
+
+type RenderOutput =
+  | RenderModel
+  | { main: RenderModel; overlays?: RenderModel[] };
+```
+
+This is good.
+
+**Adjustment:**
+
+Name the second shape explicitly so it’s not ad hoc later:
+
+```ts
+interface LayeredRender {
+  main: RenderModel;
+  overlays?: RenderModel[];
+}
+
+type RenderOutput = RenderModel | LayeredRender;
+```
+
+That’s enough for HUD/overlays later without overcommitting.
+
+---
+
+### 3. NodeType interface — keep it lean, but explicit
+
+Current:
+
+```ts
+interface NodeType {
+  validate(...): ValidationResult;
+  normalize(...): NodeV5;
+  render(...): RenderOutput;
+  onEnter(...): void;
+  onExit(...): void;
+}
+```
+
+**Adjustment:**
+
+Make `validate` optional for now (we’ll wire it in Phase 3 later steps), so we don’t pretend it’s fully implemented:
+
+```ts
+interface NodeType {
+  normalize(node: NodeV5, hunt: HuntV5): NodeV5;
+  render(node: NodeV5, ctx: NodeContext): RenderOutput;
+  onEnter(node: NodeV5, ctx: NodeContext): void;
+  onExit(node: NodeV5, ctx: NodeContext): void;
+  validate?(node: NodeV5, hunt: HuntV5): ValidationResult;
+}
+```
+
+That matches your sequencing: **execution wiring first, validation later**.
+
+---
+
+### 4. onEnter / onExit — encode the discipline rule
+
+We can’t enforce behavior in code, but we can encode intent in comments:
+
+```ts
+interface NodeType {
+  /**
+   * Called when node becomes active.
+   * IMPORTANT: No game logic decisions here (no branching, no gating).
+   * Side effects only (e.g., start SFX, log, analytics).
+   */
+  onEnter(node: NodeV5, ctx: NodeContext): void;
+
+  /**
+   * Called when node is about to be left.
+   * IMPORTANT: No navigation decisions here.
+   * Side effects only (cleanup, logging, etc.).
+   */
+  onExit(node: NodeV5, ctx: NodeContext): void;
+}
+```
+
+That’s a small thing that prevents future you from abusing it.
+
+---
+
+### 5. Minimal NodeTypes — one tweak to story
+
+For `storyNodeType`, I’d include `nextNodeId` in the render data so the renderer doesn’t have to reach back into the raw node:
+
+```ts
+render: (node) => ({
+  kind: "story",
+  data: {
+    title: node.title,
+    body: node.body,
+    ui: node.ui,
+    nextNodeId: node.nextNodeId
+  }
+})
+```
+
+Same idea for others later, but we can keep puzzle/wordPuzzle/gem as pure `typeData` for now.
+
+---
+
+If you’re good with:
+
+- trimmed `NodeContext`
+- explicit `RenderOutput`
+- optional `validate`
+- documented `onEnter/onExit` constraints
+- slightly richer `story` render
+
+then the next move is:
+
+> “Lock these skeletons and generate code”
+
+and I’ll treat this as the canonical Phase 3 NodeType/registry shape and produce the concrete implementation.
+
+“Generate Node Registry + NodeType skeletons + runtime wiring”
 
 
 
