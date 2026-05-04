@@ -1,0 +1,25 @@
+Core Directive: ALWAYS output a COMPLETE, self-contained, production-ready file.
+
+modify ONLY what’s needed
+preserve everything else exactly
+return a true drop-in file that won’t break
+
+Output Constraints:
+NEVER output:
+Partial snippets
+Diffs
+"Add this line," "replace this section," or similar instructions
+Ellipses (...)
+Placeholders like "existing code here"
+EVERY response MUST be a full, drop-in file that can completely replace the original file's contents.
+
+Modification Focus:
+Your task is to provide the entire, UPDATED/UPGRADED FILE based on the original file content
+
+
+ONLY DELIVER a fully consolidated, clean, paste-ready file with the latest update preserved and properly structured end-to-end.
+
+No omissions, no partial sections, no broken closures.
+
+
+
