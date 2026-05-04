@@ -1,0 +1,178 @@
+To get up to speed quickly without overwhelming you, I just need a quick "brain dump" on four things.
+Whenever you're ready, tell me:
+1. The Big Picture (What is it?)
+In a sentence or two, what does this app do, and who is it for?
+2. The Tech Stack (How is it built?)
+What languages, frameworks, or tools are you using? (e.g., Frontend: React Native/Swift/HTML; Backend: Node.js/Python; Database: Firebase/Supabase; or are you using a NoCode builder like Bubble or FlutterFlow?)
+3. The Roadmap (Where are we?)
+What is already finished in Phases 1 through 3?
+What exactly is Phase 4? (e.g., Are we connecting the database, building the user dashboard, integrating payment processing, or fixing UI bugs?)
+4. The Immediate Blocker (What are we doing today?)
+What is the very next thing you need to get done right now? (e.g., "I need to write the login function," or "I have a bug where the screen won't load," or "I need to map out the database structure.")
+How to reply:
+You don't need to write a massive document. You can just give me a quick summary, or copy and paste your project notes, your roadmap, or the specific code you are stuck on right now.
+What's the immediate mission for Phase 4?
+
+Perfect — here’s the **quick, clean brain‑dump** you asked for, tailored to exactly where the project actually is right now.
+
+I’ll keep it tight, accurate, and aligned with the real architecture we’ve been building.
+
+---
+
+# **1. The Big Picture — What this app is**
+Lucky Pikas is a **creator‑first adventure engine**.
+
+Creators build:
+- interactive hunts  
+- puzzles  
+- story nodes  
+- portals  
+- gem choices  
+- word puzzles  
+- inventory‑based progression  
+
+Players experience:
+- a clean, mobile‑friendly game runtime  
+- inventory collection  
+- rewards  
+- transitions  
+- timers  
+- background art  
+- sound + music  
+
+It’s basically a **modular narrative engine** with puzzle mechanics, built for creators who want to publish interactive adventures without coding.
+
+---
+
+# **2. The Tech Stack — How it’s built**
+### **Frontend / Player Runtime**
+- **HTML + CSS + Vanilla JavaScript**
+- Custom engine (`game.js`)
+- Node rendering registry (`nodeRegistry.js`)
+- NodeTypes (modular renderer extensions)
+- Inventory system
+- Audio + music system
+- Timer system
+- Transition Authority Layer
+
+### **Creator/Admin Dashboard**
+- **HTML + CSS + Vanilla JS**
+- Custom UI panels
+- JSON editor
+- Hunt builder
+- Node editor
+- Item editor
+- Live preview (uses same runtime)
+
+### **Storage**
+- **localStorage** (for now)
+- V4 Hunt Store (JSON stored in localStorage)
+- No backend yet (Phase 5+)
+
+### **No frameworks, no backend, no build tools.**
+This is intentional — maximum control, zero dependencies, creator‑first.
+
+---
+
+# **3. The Roadmap — Where we are**
+Here’s the real, accurate phase map:
+
+---
+
+## **Phase 1 — Engine Foundations (DONE)**
+- Basic node system  
+- Story nodes  
+- Portal nodes  
+- Puzzle nodes  
+- Timer nodes  
+- Audio + music  
+- Backgrounds  
+- Basic transitions  
+
+---
+
+## **Phase 2 — Admin Dashboard (DONE)**
+- Hunt builder  
+- Node editor  
+- Item editor  
+- JSON import/export  
+- Live preview  
+- V4 Hunt Store  
+
+---
+
+## **Phase 3 — Engine Upgrade (DONE)**
+- V4 node schema  
+- Node normalization  
+- Background layering  
+- Inventory system  
+- Reward popups  
+- Inventory UI  
+- WordPuzzle node type  
+- GemChoice node type  
+- Transition Authority Layer  
+- Gating system (conditions + requires + failNodeId)  
+- Hunt time tracking  
+- Result screen  
+
+This was the big stability + architecture phase.
+
+---
+
+## **Phase 4 — Current Phase (IN PROGRESS)**
+**Goal:**  
+Stabilize the engine after the major architecture upgrade.
+
+**Phase 4 includes:**
+- Fixing end‑node detection  
+- Fixing missing buttons  
+- Fixing final “Hunt Complete” screen  
+- Fixing admin preview drift  
+- Ensuring node normalization does NOT break existing hunts  
+- Ensuring transitions work across all node types  
+- Ensuring NodeTypes + inline renderers coexist safely  
+- Ensuring no visual regressions in admin dashboard  
+- Ensuring no behavioral regressions in player runtime  
+
+This is a **stability + correctness phase**, not a feature phase.
+
+---
+
+# **4. The Immediate Blocker — What we’re doing TODAY**
+### **Immediate Mission:**
+Fix the **end‑node detection + renderNode regression** so:
+
+- End nodes show their buttons  
+- Clicking the button triggers `renderComplete()`  
+- The final Hunt Complete screen appears for ALL hunts  
+- Admin preview stops glitching  
+- No hunts break due to normalization  
+- No node types lose their buttons  
+- No transitions silently fail  
+
+### **The two root causes we are fixing:**
+1. **Missing `startTimerForNode(node)` inside `renderNode()`**  
+   → caused missing buttons + broken transitions
+
+2. **normalizeNode() overwrote `nextNodeId`**  
+   → caused end‑nodes to stop being recognized
+
+These two together explain **100%** of the symptoms.
+
+---
+
+# **If you want, I can now generate:**
+### ✔ The full corrected `game.js`  
+with:
+- restored end‑node logic  
+- restored button rendering  
+- restored final screen  
+- restored admin preview behavior  
+- zero drift  
+- only surgical fixes applied  
+
+Just say:
+
+**“Give me the full corrected game.js.”**
+
+And I’ll output the exact file you need.
