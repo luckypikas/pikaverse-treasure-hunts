@@ -1,0 +1,236 @@
+This is the motherlode of game-show and puzzle content. To make this easy to
+copy, paste, and drop directly into your Node Editor, I have broken this
+Master 100 Benny List down by mechanics.
+
+You have exact answers, ranked choices, witty dialogue, and advanced game-design
+mechanics. Let’s dive in.
+
+🏆 BENNY LIST A: THE TV SHOW NODE PACK (50 ITEMS)
+
+📺 Category 1: "The Feud" (Ranked Choice Nodes)
+
+Perfect for Gem Choices or Multiple Choice Nodes. The player tries to guess the
+#1 answer. (Format: Question -> 1. Best Answer, 2. Good Answer, 3. Okay
+Answer, 4. Acceptable Answer)
+
+1.  What is the best gift for Mother’s Day? (1. Spa/Massage, 2. Jewelry, 3.
+    Flowers, 4. Handmade Card)
+2.  Name a food you should NOT order on a first date. (1. Ribs/Wings, 2.
+    Spaghetti, 3. Garlic/Onions, 4. Spinach/Salad)
+3.  Name something people lie about on dating apps. (1. Age, 2. Height, 3.
+    Income/Job, 4. Hobbies)
+4.  Name a reason someone might be late to a date. (1. Traffic, 2. Getting
+    ready/Hair, 3. Lost track of time, 4. Cold feet)
+5.  Name something you do when you want to avoid someone in public. (1. Look at
+    phone, 2. Turn around/hide, 3. Fake a phone call, 4. Wear sunglasses)
+6.  Name a place you would hate to be proposed to. (1. Fast food restaurant, 2.
+    Sporting event/Jumbotron, 3. Someone else's wedding, 4. Bathroom)
+7.  Name an excuse people use to end a bad blind date early. (1. "Friend has an
+    emergency", 2. "I feel sick", 3. "Early morning tomorrow", 4. "Left stove
+    on")
+8.  Name a hobby that screams "Red Flag" on a dating profile. (1. Collecting
+    weapons, 2. Taxidermy, 3. Stalking exes, 4. Crypto-broing)
+9.  Name an animal that describes a terrible ex. (1. Snake, 2. Rat, 3. Pig, 4.
+    Dog)
+10. Name something you forget to pack for a tropical vacation. (1. Sunscreen, 2.
+    Toothbrush, 3. Phone charger, 4. Swimsuit)
+
+🌹 Category 2: Reality TV & Dating Chaos (Trivia)
+
+For Word Puzzle or Text Input nodes.
+
+11. Flavor of Love: What giant accessory did Flavor Flav always wear around his
+    neck? (Answer: Clock)
+12. The Bachelor: What specific item is handed out to keep contestants safe from
+    elimination? (Answer: Rose)
+13. Blind Date: The 90s show famously mocked contestants by putting these above
+    their heads on screen. (Answer: Thought Bubbles)
+14. Bachelor in Paradise: Who is the famous, recurring resident bartender on the
+    island? (Answer: Wells / Wells Adams)
+15. Love is Blind: In this show, couples get engaged before they ever see each
+    other’s what? (Answer: Face)
+16. Survivor: What phrase does Jeff Probst say when he extinguishes a torch?
+    (Answer: The tribe has spoken)
+17. Hell's Kitchen: What chef famously calls people an "idiot sandwich"?
+    (Answer: Gordon Ramsay)
+18. The Price is Right: What is the famous phrase called out to invite a
+    contestant to the stage? (Answer: Come on down)
+19. Shark Tank: What is the name for the wealthy investors who sit in the
+    chairs? (Answer: Sharks)
+20. Catfish: What MTV show is entirely about people lying about their identity
+    online? (Answer: Catfish)
+
+🧠 Category 3: The "Tricky & Witty" Riddles
+
+Classic riddles that force players to think laterally.
+
+21. I have keys but no locks. I have a space but no room. You can enter, but you
+    can’t go outside. What am I? (Answer: Keyboard)
+22. What has words, but never speaks? (Answer: Book)
+23. What runs all around a backyard, yet never moves? (Answer: Fence)
+24. I speak without a mouth and hear without ears. I have no body, but come
+    alive with wind. What am I? (Answer: Echo)
+25. What gets wetter the more it dries? (Answer: Towel)
+26. The more of this there is, the less you see. What is it? (Answer: Darkness)
+27. I have branches, but no fruit, trunk, or leaves. What am I? (Answer: Bank)
+28. What can you hold in your right hand, but never in your left hand? (Answer:
+    Your left elbow)
+29. I belong to you, but everyone else uses me more than you do. What am I?
+    (Answer: Your name)
+30. What goes up and down but doesn’t move? (Answer: Stairs)
+31. It has a neck but no head. What is it? (Answer: Bottle)
+32. What has an eye but cannot see? (Answer: Needle)
+33. A man was driving a black truck. His lights were not on. The moon was not
+    out. A lady was crossing the street. How did he see her? (Answer: It was
+    daytime / The sun was out)
+34. What invention lets you look right through a wall? (Answer: Window)
+35. I have cities, but no houses. I have mountains, but no trees. I have water,
+    but no fish. What am I? (Answer: Map)
+36. What is always in front of you but can’t be seen? (Answer: The future)
+37. What can you break, even if you never pick it up or touch it? (Answer: A
+    promise)
+38. I shave every day, but my beard stays the same. What am I? (Answer: Barber)
+39. You walk into a room that contains a match, a kerosene lamp, a candle and a
+    fireplace. What would you light first? (Answer: The match)
+40. I have a tail and a head, but no body. What am I? (Answer: Coin)
+
+🗣️ Category 4: Secret Decoder Messages (Fact + Action)
+
+Provide the player with a graphic of encrypted text (using a cipher). Once
+decoded, the text reads like this:
+
+41. Message 1: "FACT: Octopuses have three hearts. ACTION: Pick the middle
+    door."
+42. Message 2: "FACT: Bananas are berries, strawberries are not. ACTION: Type
+    the word SALMON in the box."
+43. Message 3: "FACT: Wombat poop is cube-shaped. ACTION: Go left to find the
+    Gold Key."
+44. Message 4: "FACT: Honey never spoils. ACTION: It's cozy in the middle."
+    (Clue to pick the middle option)
+45. Message 5: "FACT: Sloths can hold their breath longer than dolphins. ACTION:
+    The answer to the riddle is SHADOW."
+46. Message 6: "FACT: A day on Venus is longer than a year on Venus. ACTION: Do
+    not trust the red door."
+47. Message 7: "FACT: Cows have best friends. ACTION: Get your next persona for
+    free at the Lucky Pikas store."
+48. Message 8: "FACT: The Eiffel Tower grows taller in the summer. ACTION: The
+    passcode is 1984."
+49. Message 9: "FACT: Water can boil and freeze at the same time. ACTION: Give
+    the bear the honey."
+50. Message 10: "FACT: Sharks existed before trees. ACTION: Turn back now, or
+    lose 50 seconds."
+
+🎭 BENNY LIST B: THE MECHANICS & ENTICEMENTS (50 ITEMS)
+
+🚪 Category 5: "Curtain Phrases" & Door Enticements
+
+Use these as button text or portal body text to mess with the player's
+psychology.
+
+51. "I'm not saying this door leads to certain doom, but maybe stretch first."
+52. "Look, the other doors are lying to you. I'm the only one who respects you."
+53. "Behind this door is the Gold Key. Or a hungry tiger. 50/50. Feeling lucky?"
+54. "Please don't pick me. I'm on my union break."
+55. "Follow the draft... it smells like victory. And slightly like vanilla."
+56. "Your chosen path begins here... no refunds."
+57. "If you don't pick me, you'll be sorry."
+58. "I'm your best bet."
+59. "This is the way out... probably."
+60. "What have you got to lose? (Other than your inventory)."
+61. "Choose me to discover a clue."
+62. "Behind one of these is the Ruby Key. Behind the other is a 30-second
+    penalty."
+63. "It's dark in here, but I promise I'm the exit."
+64. "Do you hear that? Sounds like treasure. Or a trap. Step inside!"
+65. "Only absolute legends click this button."
+66. "This door is locked from the inside. Try knocking."
+67. "The sign says 'Do Not Enter'. So obviously, you should enter."
+68. "Pick me. I have cookies."
+69. "This portal is unstable. May cause time travel."
+70. "I wouldn't go in there if I were you. But you aren't me."
+
+🧩 Category 6: Fill-in-the-Blank Pop Culture
+
+Player has to finish the phrase to unlock the node.
+
+71. Just a small town girl, livin' in a... (Answer: lonely world)
+72. To infinity, and... (Answer: beyond)
+73. May the Force be... (Answer: with you)
+74. Hakuna Matata, what a wonderful... (Answer: phrase)
+75. I feel the need, the need for... (Answer: speed)
+76. Houston, we have a... (Answer: problem)
+77. There's no place like... (Answer: home)
+78. You can't handle the... (Answer: truth)
+79. I'm the king of the... (Answer: world)
+80. Life is like a box of... (Answer: chocolates)
+
+⚙️ Category 7: New Game Node Concepts (How to use the engine)
+
+81. The "Lucky Pikas Global Timer" Mechanic:
+      - How it works: At Node 1, give the player an item: "pika_yoga_timer".
+      - The Catch: At Node 20, have a condition: requires: ["pika_yoga_timer"].
+        If they took too long navigating the maze, a trap node along the way
+        uses the effect remove_item: "pika_yoga_timer". If they don't have it by
+        the end, they fail!
+82. The Timer Shop:
+      - How it works: A portal node says, "Out of time? Buy a Lucky Pikas
+        Timer." Player uses a Gem Choice: Give 5 "ancient_coins" -> Effect:
+        add_item: "pika_yoga_timer".
+83. Murder Mystery Investigator:
+      - How it works: The hunt is a crime scene. Puzzles don't give keys; they
+        give items like "muddy_shoe", "torn_receipt", "fingerprint". The final
+        node requires all 3 to accuse the correct suspect.
+84. The Weight Limit Trap:
+      - How it works: You give the player a lot of items (rocks, gems, statues).
+        A bridge node checks conditions: If the player has gold_statue AND
+        silver_statue, the bridge breaks! They have to go to a "drop off" node
+        to remove items before crossing.
+85. The Casino Slot Machine Node:
+      - How it works: A gem choice with 3 buttons. Button 1: "Pull Lever
+        (Costs 1 coin)". Effect 1: 80% chance to route to "Lose Node", 20%
+        chance to route to "Jackpot Node" (gives 10 coins).
+86. The Pac-Man Maze:
+      - How it works: 20 interconnected nodes. The goal is to collect 10
+        "power_pellet" items scattered in dead ends. But moving between nodes
+        deducts time. If time = 0, the "Ghost" catches them.
+87. The Combination Safe:
+      - How it works: 3 consecutive Word Puzzle nodes. Node 1 asks for a number
+        (Answer: 4). Node 2 asks for a number (Answer: 8). Node 3 asks for a
+        number (Answer: 15). The safe opens.
+88. The "Lie Detector" Interview:
+      - How it works: The creator writes a story where an NPC is talking. The
+        player can choose "Believe them" or "Call them a liar". If the player
+        has the item "secret_dossier", they know the NPC is lying and unlock the
+        hidden path.
+89. The Memory Game:
+      - How it works: Node 1 shows a sequence of colors (Red, Blue, Green,
+        Yellow). Node 2 asks "What was the 3rd color?" Answer wrong, go back to
+        Node 1.
+90. The Infection Mechanic:
+      - How it works: A trap node gives the item "zombie_bite". Every node after
+        that subtracts 5 seconds from the timer until the player finds the
+        "antidote" item!
+
+🎙️ Category 8: Tricky Pop Culture & Trivia
+
+Harder questions to stump the player.
+
+91. What is the only letter that doesn’t appear in any US state name? (Answer:
+    Q)
+92. What was the first toy to be advertised on television? (Answer: Mr Potato
+    Head)
+93. In the game Monopoly, what is the most expensive property? (Answer:
+    Boardwalk)
+94. What is the rarest M&M color? (Answer: Brown)
+95. What company is the world's largest distributor of toys? (Answer: McDonald's
+    - because of Happy Meals!)
+96. How many stripes are on the US Flag? (Answer: 13)
+97. What is the fear of clowns called? (Answer: Coulrophobia)
+98. What character has been played by the most actors on screen? (Answer:
+    Sherlock Holmes)
+99. What color is the "M" in the McDonald's logo? (Answer: Yellow / Gold)
+100. In The Wizard of Oz, what were Dorothy’s slippers made of in the original
+     book? (Answer: Silver - Hollywood changed them to ruby for Technicolor!)
+
+This is your baseline content library. If you put these into a 50-node template,
+you have an instantly playable, highly viral game show experience ready to go.
